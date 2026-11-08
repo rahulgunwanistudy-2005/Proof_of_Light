@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Proof of Light physics workbench. Test a one-time color sequence against a real camera capture.">
+  <title>Proof of Light · Physics workbench</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="module" src="/static/capture.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to capture</a>
+  <header><a class="wordmark" href="/">Proof of Light<span class="aperture" aria-hidden="true"></span></a><span class="phase">Physics workbench <span class="dot"></span> Phase 0</span></header>
+  <main id="main">
+    <section class="intro"><div><h1>Test what the light can prove.</h1><p>A fresh color sequence. A surface on camera. A measurable response.</p></div><p class="experiment">Research build<br><strong>Physical validation pending</strong></p></section>
+    <p class="finding"><strong>Security finding:</strong> fabricated uploads passed this experiment without a camera. A color match cannot establish an authentic item. No refund decisions use this result.</p>
+    <div class="bench">
+      <section class="camera-section" aria-label="Camera framing">
+        <div class="camera" id="camera-shell">
+          <div class="camera-placeholder" id="placeholder"><svg viewBox="0 0 80 64" width="80" height="64" fill="none" aria-hidden="true"><path d="M20 18h40v30H20zM32 18v-5h16v5" stroke="currentColor" stroke-width="2"/><circle cx="40" cy="33" r="9" stroke="currentColor" stroke-width="2"/></svg><p>Your camera stays off until you enable it.</p><span>No microphone. Keep faces outside the frame.</span></div>
+          <video id="preview" muted autoplay playsinline aria-label="Live camera preview" hidden></video>
+          <div class="guide" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <span class="camera-note">Front camera · item 15–40 cm away</span>
+        </div>
+        <div class="camera-toolbar"><span id="camera-state">Camera off</span><button id="stop-camera" class="text-button" disabled>Turn camera off</button></div>
+        <p class="framing">Face the screen toward the item so the screen can light it. Keep the item still and fill the guide.</p>
+      </section>
+      <aside class="controls" aria-label="Capture setup">
+        <h2>Record one experiment</h2>
+        <p class="setup-copy">Start with a pale mug in ordinary indoor light. Screen brightness and distance affect the result.</p>
+        <div class="fields"><label>Surface <select id="object"><option value="ceramic">Ceramic mug</option><option value="cardboard">Matte cardboard</option><option value="plastic">Plastic</option><option value="fabric">Fabric</option><option value="print">Printed item photo (attack)</option><option value="screen">Item photo on a screen (attack)</option><option value="replay">Earlier video on a screen (attack)</option></select></label><label>Lighting <select id="lighting"><option value="indoor">Normal indoor</option><option value="dim">Dim indoor</option><option value="bright">Bright / near a window</option></select></label><label>Distance <select id="distance"><option value="25">25 cm</option><option value="15">15 cm</option><option value="40">40 cm</option></select></label></div>
+        <div class="consent"><p><strong>This experiment changes the screen color.</strong> Standard mode uses at most 2.5 changes per second. Stop if uncomfortable. This has not undergone device-specific flash testing.</p><label class="check"><input type="checkbox" id="reduced"> Reduced intensity, slower sequence</label><label class="check"><input type="checkbox" id="consent"> I consent to camera capture and local analysis.</label></div>
+        <div class="actions"><button id="enable" class="secondary">Enable camera</button><button id="start" class="primary" disabled>Start light capture</button></div>
+        <button id="alternative" class="text-button alternative">I can’t use changing lights</button>
+        <p class="privacy">Frames go only to this local server. Up to four captures remain in memory for 10 minutes, then expire on the next request. Nothing is saved until you download it.</p>
+      </aside>
+    </div>
+    <p id="status" class="status" role="status" aria-live="polite">Enable the camera, frame the item, then start a fresh sequence.</p>
+    <section class="chromagram" aria-labelledby="chromagram-title"><div class="section-title"><h2 id="chromagram-title">The chromagram</h2><span id="sequence-state">Waiting for capture</span></div><p class="chromagram-help">Ten challenge slots. Issued light above, decoded reflection below. Calibration runs first.</p><div class="gram-row"><span class="row-label">Issued</span><div class="swatches" id="issued" aria-label="Issued challenge colors"></div></div><div class="gram-row"><span class="row-label">Read</span><div class="swatches" id="decoded" aria-label="Decoded reflection colors"></div></div><div class="gram-legend"><span><i class="legend-line"></i> A color is shown only when measured</span><span>Each slot has a text label</span></div></section>
+    <section id="result" class="result" hidden aria-labelledby="result-title"><div class="result-heading"><div><p class="result-kicker">Experimental light response</p><h2 id="result-title"></h2><p id="result-reason"></p></div><a id="download" class="secondary" download>Download capture (.npz)</a></div><dl id="metrics" class="metrics"></dl><div class="plots"><div><h3>Received chromaticity</h3><p id="trace-empty" hidden>No responsive surface was found. There is no usable reflection trace to display.</p><svg id="trace" viewBox="0 0 600 130" role="img" aria-label="Red and green chromaticity over the capture"></svg></div><div><h3>Responsive surface</h3><canvas id="heatmap" width="80" height="60" aria-label="Calibration response strength heatmap"></canvas><p>Brighter pixels respond more strongly.</p></div></div><p class="limit"><strong>A light match is not proof of an authentic item.</strong> Paper can reflect the same sequence. These provisional thresholds need physical testing. No order binding, damage assessment or PayPal action runs in this build.</p></section>
+    <section class="notes"><div><h2>What this test measures</h2><p>The server issues a one-time sequence when you start. The camera records reflected colors. The verifier aligns the calibration, finds responsive pixels and compares the ten challenge slots.</p></div><div><h2>What happens next</h2><p>Download the capture to keep the raw sampled frames and timing log. The physics gate requires recordings across objects, lighting and devices, including printed-photo and replay attacks.</p></div></section>
+  </main><footer><span>Proof of Light</span><span>Local experiment · No payments connected</span></footer>
+  <div id="light-field" hidden role="dialog" aria-modal="true" aria-label="Light capture in progress"><div class="capture-inset" id="inset"><span id="live-step">Preparing</span></div><button id="abort">Stop capture</button></div>
+</body>
+</html>
