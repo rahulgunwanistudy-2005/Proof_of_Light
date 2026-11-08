@@ -12,3 +12,5 @@ eval/fixtures/
 *.zip
 .DS_Store
 *.egg-info/
+*.db
+*.db-*

@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Proof of Light physics workbench. Test a one-time color sequence against a real camera capture.">
-  <title>Proof of Light · Physics workbench</title>
+  <title>Proof of Light · Guided capture</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/static/style.css">
   <script type="module" src="/static/capture.js"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to capture</a>
-  <header><a class="wordmark" href="/">Proof of Light<span class="aperture" aria-hidden="true"></span></a><span class="phase">Physics workbench <span class="dot"></span> Phase 0</span></header>
+  <header><a class="wordmark" href="/">Proof of Light<span class="aperture" aria-hidden="true"></span></a><span class="phase">Capture assistance <span class="dot"></span> Research build</span></header>
   <main id="main">
-    <section class="intro"><div><h1>Test what the light can prove.</h1><p>A fresh color sequence. A surface on camera. A measurable response.</p></div><p class="experiment">Research build<br><strong>Physical validation pending</strong></p></section>
-    <p class="finding"><strong>Security finding:</strong> fabricated uploads passed this experiment without a camera. A color match cannot establish an authentic item. No refund decisions use this result.</p>
+    <section class="intro"><div><h1>A clearer capture for review.</h1><p>Record the item, inspect its light response, and keep the evidence together.</p></div><p class="experiment">Research build<br><strong>Merchant review required</strong></p></section>
+    <p class="finding"><strong>Security finding:</strong> fabricated uploads passed this experiment without a camera. A color match cannot establish an authentic item. A merchant must review the evidence and approve every financial action.</p>
     <div class="bench">
       <section class="camera-section" aria-label="Camera framing">
         <div class="camera" id="camera-shell">
@@ -39,7 +39,7 @@
     <p id="status" class="status" role="status" aria-live="polite">Enable the camera, frame the item, then start a fresh sequence.</p>
     <section class="chromagram" aria-labelledby="chromagram-title"><div class="section-title"><h2 id="chromagram-title">The chromagram</h2><span id="sequence-state">Waiting for capture</span></div><p class="chromagram-help">Ten challenge slots. Issued light above, decoded reflection below. Calibration runs first.</p><div class="gram-row"><span class="row-label">Issued</span><div class="swatches" id="issued" aria-label="Issued challenge colors"></div></div><div class="gram-row"><span class="row-label">Read</span><div class="swatches" id="decoded" aria-label="Decoded reflection colors"></div></div><div class="gram-legend"><span><i class="legend-line"></i> A color is shown only when measured</span><span>Each slot has a text label</span></div></section>
     <section id="result" class="result" hidden aria-labelledby="result-title"><div class="result-heading"><div><p class="result-kicker">Experimental light response</p><h2 id="result-title"></h2><p id="result-reason"></p></div><a id="download" class="secondary" download>Download capture (.npz)</a></div><dl id="metrics" class="metrics"></dl><div class="plots"><div><h3>Received chromaticity</h3><p id="trace-empty" hidden>No responsive surface was found. There is no usable reflection trace to display.</p><svg id="trace" viewBox="0 0 600 130" role="img" aria-label="Red and green chromaticity over the capture"></svg></div><div><h3>Responsive surface</h3><canvas id="heatmap" width="80" height="60" aria-label="Calibration response strength heatmap"></canvas><p>Brighter pixels respond more strongly.</p></div></div><p class="limit"><strong>A light match is not proof of an authentic item.</strong> Paper can reflect the same sequence. These provisional thresholds need physical testing. No order binding, damage assessment or PayPal action runs in this build.</p></section>
-    <section class="notes"><div><h2>What this test measures</h2><p>The server issues a one-time sequence when you start. The camera records reflected colors. The verifier aligns the calibration, finds responsive pixels and compares the ten challenge slots.</p></div><div><h2>What happens next</h2><p>Download the capture to keep the raw sampled frames and timing log. The physics gate requires recordings across objects, lighting and devices, including printed-photo and replay attacks.</p></div></section>
+    <section class="notes"><div><h2>What this test measures</h2><p>The server issues a one-time sequence when you start. The camera records reflected colors. The verifier aligns the calibration, finds responsive pixels and compares the ten challenge slots.</p></div><div><h2>What happens next</h2><p>Download the capture to keep the raw sampled frames and timing log. A merchant reviews the full case before approving a financial action. This research build measures uploaded light response; it does not prove the item is authentic.</p></div></section>
   </main><footer><span>Proof of Light</span><span>Local experiment · No payments connected</span></footer>
   <div id="light-field" hidden role="dialog" aria-modal="true" aria-label="Light capture in progress"><div class="capture-inset" id="inset"><span id="live-step">Preparing</span></div><button id="abort">Stop capture</button></div>
 </body>

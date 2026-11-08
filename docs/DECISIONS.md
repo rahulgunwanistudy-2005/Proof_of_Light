@@ -1,5 +1,10 @@
 # Decisions
 
+Current direction: the user approved capture assistance with merchant-reviewed
+financial actions on 8 Nov 2026. `PRODUCT_BRIEF.md` supersedes the original
+autonomous-refund/security pitch. Earlier entries below are the historical gate
+record, not a claim that the gate later passed.
+
 ## 2026-11-08: honor the physics gate before the product build
 The user's session prompt is the build request. The downloaded pack's evidence
 file is source material, not independently verified facts. Its original text is
@@ -65,3 +70,20 @@ a rapid burst. An rAF mutation log is an approximation of display paint.
 The requested production host is Render. Do not create an unrelated Sites
 deployment or publish the experimental service while its gate is unresolved.
 Phones need a trusted HTTPS origin; a laptop's LAN HTTP address is not sufficient.
+
+## Approved pivot and first foundation
+Continue infrastructure work under the revised product, while physical optical
+measurements remain pending. Every financial proposal is PENDING_REVIEW, regardless
+of light status or any future model confidence. Approval is authenticated,
+version-bound, time-limited and stored atomically with its outbox entry. The
+executor is absent, and approval responses state PayPal has not executed it.
+
+Use the APIMatic-specified SDK 2.4.0 for checkout after reading its installed
+source. SDK retry defaults remain explicitly disabled; the wrapper retries only
+429/5xx with a stable 32-hex-character key. Transport failure means unknown
+outcome. Credentials and the default catalog are server-side. No public checkout
+route, refund executor, dispute ingestion or real sandbox gate is complete yet.
+
+Local SQLAlchemy/Alembic state uses SQLite for a credential-free development
+path. Postgres schema support is prepared but not tested on a live Postgres
+instance. Do not claim cloud durability or multi-worker safety from SQLite tests.

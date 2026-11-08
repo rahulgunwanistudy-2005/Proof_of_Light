@@ -15,8 +15,37 @@
 No generative images or videos were used. Synthetic numerical signal fixtures
 and the injection probe are labeled test data, not physical experiments.
 
-## Not yet used
-Gemini, PayPal Agent Toolkit, APIMatic Context Plugin, Kernel and Render Workflows
-are planned only. There is no sponsor eligibility claim at this stage. APIMatic
-must be discovered/configured and used before writing any PayPal integration;
-no such integration has been started. No outreach or external message was sent.
+## APIMatic used for the checkout foundation
+Installed the official PayPal context package from
+https://github.com/paypaldev/server-sdk-context-plugin-preview at commit
+`6aa057126f0d4709a42e15002aab832a94935d92` using the published context-plugins
+installer for Codex. The installer confirmed `paypal@context-plugins-local`.
+It advises a new Codex session to auto-load skills. In this session the installed
+Python skills were read explicitly from its installed cache before coding.
+
+Read python-getting-started, client-initialization, authentication,
+calling-endpoints, models, error-handling, configuration-resilience and testing.
+Installed the specified paypal-server-sdk 2.4.0 and inspected that installed
+source to confirm method shapes, auth credentials, enum-to-host mapping and models.
+
+Concrete effects in `apps/api/paypal/checkout.py` and its tests:
+- Uses `PaypalServersdkClient`, explicit `Environment.SANDBOX`, flat timeout/retry
+  options and `ClientCredentialsAuthCredentials`; avoids an obsolete SDK.
+- Calls `client.orders.create_order/get_order/capture_order` with the actual
+  single options-dictionary shape, not guessed keyword signatures.
+- Builds `OrderRequest.from_dictionary` from wire-named catalog fields and reads
+  the real ApiResponse envelope. Retry policy is one application layer; SDK
+  retries stay off, and transport errors produce an unknown-outcome state.
+- Tests below the SDK using a URL-routed requests adapter. OAuth succeeds before
+  operation-specific failures, so negative tests exercise checkout rather than
+  accidentally failing only the token exchange.
+
+No fabricated before/after comparison or sponsor prize eligibility is claimed.
+SDK wire behavior is locally stub-tested; real sandbox behavior is pending keys.
+The first SDK install failed resolving msgpack; installing its compatible 1.2.4
+wheel and retrying succeeded. No SDK source was edited or vendored.
+
+## Still planned
+Gemini, PayPal Agent Toolkit, Kernel and Render Workflows are not yet used.
+Render workspace discovery found two workspaces; user selection is pending and
+no resources have been created. No outreach or external message was sent.

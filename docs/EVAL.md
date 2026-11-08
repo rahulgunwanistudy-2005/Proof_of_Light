@@ -46,3 +46,10 @@ positive numerical signal tests pass.
 Do not count the script's generated frames as a genuine physical recording.
 The guessing-null chance of 4^-10 does not apply to an attacker who reads the
 challenge and constructs the pixels adaptively.
+
+## Capture-assistance foundation checks
+The expanded suite passes 59 tests, including merchant approval, invalidation,
+rejection, all financial action kinds, migration round-trip and actual SDK wire
+serialization with a URL-routed stub transport. These tests validate local
+behavior, not live PayPal, live Postgres, human-review quality or optical fraud
+resistance. The historical physical gate remains unpassed.

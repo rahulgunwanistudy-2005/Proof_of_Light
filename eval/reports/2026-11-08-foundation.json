@@ -1,0 +1,20 @@
+{
+  "checkpoint": "capture-assistance-foundation",
+  "tests_passed": 59,
+  "warnings": 1,
+  "warning": "Upstream Starlette testclient httpx deprecation",
+  "checks": [
+    "pytest",
+    "ruff check",
+    "ruff format --check",
+    "node --check",
+    "pip check",
+    "alembic upgrade/check/downgrade"
+  ],
+  "paypal_responses": "STUBBED_HTTP_TRANSPORT_THROUGH_REAL_SDK",
+  "physical_validation": false,
+  "live_paypal_test": false,
+  "live_postgres_test": false,
+  "financial_executor_connected": false,
+  "product_direction": "capture assistance; merchant review required"
+}

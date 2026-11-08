@@ -1,5 +1,46 @@
 # Progress
 
+## 8 Nov 2026: approved capture-assistance pivot and review foundation
+
+The user chose: "Revise the pitch to a capture-assistance tool; keep money movement
+behind merchant review." Infrastructure work resumes under `PRODUCT_BRIEF.md`.
+The original physical/security gate is not retroactively marked passed. The
+historical Phase 0 checkpoint below records why the promise changed.
+
+Completed in this checkpoint:
+- Revised product pitch, capture screen, README and policy boundaries. No
+  automatic denial or fraud accusation from a failed/weak light response.
+- Authenticated merchant review API, durable SQLAlchemy case/proposal/approval/
+  outbox/audit records and Alembic upgrade/check/downgrade path. Local SQLite only.
+- Exact action/amount/currency/destination/version approval, expiry, rejection,
+  stale-case invalidation, idempotent repeated approvals and audit hash chaining.
+- PayPal SDK 2.4.0 checkout adapter grounded with the installed official APIMatic
+  context package. Sandbox-only catalog pricing, OAuth caching, request IDs,
+  bounded 429/5xx retries and unknown-outcome handling after transport failure.
+- Generated an ignored local `.env` with a merchant-only credential; no external
+  sandbox/model keys were generated, displayed or committed.
+
+Evidence: 59 tests pass (one upstream test-client deprecation warning), including
+actual SDK serialization over a stubbed HTTP transport, all financial proposal
+kinds and migration round-trip. Ruff, formatting, JavaScript syntax and installed
+package consistency pass. SDK responses are synthetic; no real transaction was
+performed. No live Postgres concurrency test has run.
+
+Phase 1 remains incomplete: public checkout routes/store, tracking, dispute
+intake/webhook verification/polling, staged disputes and hosted resources are
+not implemented. Refund execution, Gemini, Agent Toolkit and later phases remain
+pending. Approval returns AWAITING_EXECUTOR and paypal_executed=false.
+
+External inputs requested: choose Render workspace (My Workspace or mnb) and add
+PayPal sandbox client ID/secret plus Gemini key to the existing ignored `.env`.
+Do not paste credentials into chat. No Render resources have been created and
+there is no production deployment. The prepared `scripts/check_sandbox.py` only
+checks a token exchange once credentials are available; it creates no orders or
+financial actions.
+
+Budget: this is the first Phase 1 foundation checkpoint, within the 12-hour phase
+budget. Elapsed session time is not treated as a measured engineering benchmark.
+
 ## 8 Nov 2026: Phase 0 checkpoint
 
 **Gate NOT PASSED. Later phases have not started.** Physical recordings are

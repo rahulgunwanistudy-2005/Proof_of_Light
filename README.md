@@ -1,11 +1,19 @@
 # Proof of Light
 
-An experimental light-challenge workbench for item capture. Intended hackathon
-pitch: **“Liveness for things, not faces.”**
+Guided item capture and a merchant review boundary for refund claims.
 
-**Status: Phase 0 only. The physical gate has not passed. A local injection probe
-passed the verifier with fabricated frames and no camera. This is not a working
-refund-fraud protection system. No PayPal, AI or payment action is connected.**
+**Clearer captures. Better-informed refund decisions.**
+
+Current product brief: [capture assistance with merchant review](docs/PRODUCT_BRIEF.md).
+
+**Status: local foundation.** Guided capture, the review API and durable approval
+records work locally. The sandbox checkout adapter is tested through the real
+PayPal SDK with stubbed responses. No real sandbox transaction, AI assessment,
+public deployment or refund executor has been completed.
+
+**A light match does not prove authenticity.** An adaptive injected upload passed
+without a camera. Weak/failed captures never automatically deny a claim. Every
+financial claim action requires explicit merchant review.
 
 ## What is working
 
@@ -16,6 +24,14 @@ refund-fraud protection system. No PayPal, AI or payment action is connected.**
 - Deterministic integrity checks, calibration-only latency alignment and ROI,
   chromaticity decoding, correlation, response heatmap, trace and chromagram.
 - `.npz` export and a repeatable offline verifier CLI; no model keys required.
+- Authenticated merchant case/proposal/approval API with version-bound approval,
+  stale-case invalidation, rejection, expiry and a durable outbox. Approval saves
+  a queued action; it does not execute PayPal.
+- SQLAlchemy 2 mappings, Alembic migration and an audit hash chain. SQLite locally;
+  Postgres driver and URL support prepared but not integration-tested.
+- PayPal Server SDK 2.4.0 checkout adapter, sandbox host enforcement, server-priced
+  catalog, stable request IDs, OAuth cache and bounded transient retries. Not
+  exposed as public checkout yet.
 - Tests of synthetic signals, API validation and replay handling; browser QA
   using a fake camera, including 360 px layout, consent, cancel and download.
 
@@ -25,8 +41,9 @@ Requires Python 3.12+. From the repository root:
 
 ```sh
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.lock
-.venv/bin/python -m pip install --no-deps -e .
+.venv/bin/python -m pip install -r requirements-dev.lock -e .
+.venv/bin/python scripts/init_local.py
+.venv/bin/alembic upgrade head
 .venv/bin/python -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -37,7 +54,7 @@ The camera stops after each recording. Download within ten minutes to keep it.
 Camera access requires a secure context. A localhost laptop URL works; a plain
 HTTP LAN address on a phone does not. See [MDN’s camera requirements](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
 The spike is local only and allows localhost/127.0.0.1 hosts. Phone/public hosting
-is intentionally deferred with the rest of the product build.
+is not configured yet.
 
 The screen changes color. Reduced intensity and a non-light alternative are
 available. No device-specific flash certification is claimed; see the
@@ -62,10 +79,10 @@ response. A signed challenge authenticates server issuance, not the source of
 uploaded pixels. A printed photo may also reflect the live screen light.
 Neither more challenge entropy nor streaming colors alone solves that boundary.
 
-Do not gate refunds on this verifier. Possible next directions are a narrower
-capture-assistance tool with merchant review or an investigation of trusted
-capture and stronger physical presentation checks. The user must select the
-direction before the gated product phases resume.
+The approved direction is capture assistance with merchant-reviewed financial
+actions. The light response is diagnostic evidence, never refund authorization
+or proof of fraud. The known bypass stays visible and reproducible. See the
+[merchant-review contract](docs/MERCHANT_REVIEW.md).
 
 ## Verify and record physical fixtures
 
@@ -84,13 +101,16 @@ dataset, calibrated thresholds, FAR/FRR or fraud-blocking claim exists yet.
 ## Scope and planned integrations
 
 The requested system uses PayPal sandbox Orders/Disputes/Payments/Webhooks,
-PayPal Agent Toolkit, Gemini damage assessment, and Render durable jobs. These
-are **planned, not implemented**. No sponsor integration, hosted judge path,
-evidence submission, sandbox dispute or refund is shown as working.
+PayPal Agent Toolkit, Gemini damage assessment, and Render durable jobs.
+Checkout SDK code is implemented and locally stub-tested. Disputes, Payments,
+Webhooks, Agent Toolkit, Gemini and Render resources remain planned. No hosted
+judge path, evidence submission, real sandbox dispute or refund is shown as
+working. APIMatic’s PayPal context package was installed and used to ground the
+SDK integration; see the specific evidence in [AI_TOOLS.md](docs/AI_TOOLS.md).
 
-The later design calls for a model to propose a damage assessment, a deterministic
-policy to decide, and a gated outbox to act in PayPal. Those components cannot
-make the current browser capture authentic by themselves.
+The model will suggest visible damage and uncertainty. A merchant reviews the
+exact proposed action; code verifies the approval before an eventual executor
+acts in PayPal. These components do not attest camera authenticity.
 
 See [decisions](docs/DECISIONS.md), [threat model](docs/THREAT_MODEL.md),
 [progress](docs/PROGRESS.md), [AI tools used](docs/AI_TOOLS.md) and
@@ -101,7 +121,9 @@ See [decisions](docs/DECISIONS.md), [threat model](docs/THREAT_MODEL.md),
 No microphone, no face requirement, no third-party upload. Up to four captures
 remain only in local server memory for ten minutes, removed on a later request,
 eviction or server shutdown. Downloaded files remain on your machine until you
-delete them. The planned product’s 30-day retention system is not implemented.
+delete them. Review case, proposal, approval and audit records persist separately
+in the local database and have no automatic retention job yet. The planned
+product’s 30-day retention system is not implemented.
 
 Source is MIT licensed. The supplied frontend design skill retains its separate
 Apache-2.0 license in `design/frontend-design/LICENSE.txt`.
@@ -109,3 +131,15 @@ Apache-2.0 license in `design/frontend-design/LICENSE.txt`.
 Conceptual inspiration: screen-illumination face liveness, including
 [iProov’s genuine presence approach](https://www.iproov.com/biometric-encyclopedia/genuine-presence-assurance).
 This experimental code is independent and makes no equivalent security claim.
+
+## Merchant review setup
+
+The first-run helper creates an ignored `.env` without overwriting an existing
+file and generates a merchant-only access token. Keep it out of buyer flows,
+AI prompts and public demos. Open `/docs` locally and use its Authorize control
+with that credential to inspect the review API. Review access is disabled when
+the credential is missing or too short. See [review instructions](docs/MERCHANT_REVIEW.md).
+
+Add external sandbox credentials only to `.env`. There is no production PayPal
+mode. A completed review still reports `paypal_executed: false` while the executor
+is absent. Never present a saved approval as a completed refund.

@@ -188,7 +188,7 @@ function displayResult(result, challenge) {
   swatches("issued", challenge.body, challenge.palette);
   swatches("decoded", report.decoded, challenge.palette, challenge.body);
   $("sequence-state").textContent = `${report.matches} of 10 slots matched`;
-  const titles = {VERIFIED: "The light sequence matched.", FAILED: "The capture did not pass.", INCONCLUSIVE: "The result is inconclusive."};
+  const titles = {VERIFIED: "The light sequence matched.", FAILED: "The signal did not match.", INCONCLUSIVE: "The result is inconclusive."};
   $("result-title").textContent = titles[report.verdict];
   $("result-reason").textContent = report.reason;
   $("download").href = result.download;

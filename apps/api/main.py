@@ -1,4 +1,4 @@
-"""Local-only Phase 0 server. No PayPal, AI, durable storage or production claims.
+"""Local capture-assistance API with merchant review; no financial executor.
 
 FastAPI/Pydantic reference: https://fastapi.tiangolo.com/tutorial/body/
 """
@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -22,8 +23,13 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from apps.api.review.router import router as review_router
+from apps.api.review.service import ReviewError
+
 ROOT = Path(__file__).resolve().parents[2]
-app = FastAPI(title="Proof of Light physics spike", version="0.0.1")
+load_dotenv(ROOT / ".env")
+app = FastAPI(title="Proof of Light capture assistance", version="0.1.0")
+app.include_router(review_router)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
 SECRET = secrets.token_bytes(32)
 LOCK = threading.Lock()
@@ -33,9 +39,16 @@ ISSUANCE: dict[str, list[float]] = {}
 MAX_UPLOAD = 16 * 1024 * 1024
 
 
+@app.exception_handler(ReviewError)
+async def review_error(request: Request, error: ReviewError):
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(status_code=error.status, content={"detail": str(error)})
+
+
 @app.middleware("http")
 async def local_limits(request: Request, call_next):
-    if request.method == "POST":
+    if request.method in {"POST", "PUT", "PATCH"}:
         origin = request.headers.get("origin")
         if origin and origin != str(request.base_url).rstrip("/"):
             return Response("Use the capture page on this server.", status_code=403)
@@ -87,7 +100,14 @@ class Capture(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "phase": 0, "physical_gate": "pending", "paypal": "not integrated"}
+    return {
+        "status": "ok",
+        "phase": "1-foundation",
+        "product": "capture-assistance",
+        "physical_gate": "pending",
+        "financial_actions": "merchant approval required",
+        "paypal": "not integrated",
+    }
 
 
 @app.post("/api/challenges")

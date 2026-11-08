@@ -18,7 +18,7 @@ is the purchased unit. No autonomous money movement is permitted.
 | Changed or reused challenge | API tests | HMAC tampering rejected; second use rejected; does not prevent first-use synthesis |
 | Damaged replacement unit plus valid QR | No binding implementation yet | A QR alone does not identify the physical unit |
 | Live inpainting of cracks | Not evaluated | Residual risk; no robustness claim |
-| Genuine undamaged item | No damage model/policy yet | A light response alone cannot justify a refund |
+| Genuine undamaged item | No AI damage model; explicit merchant review required | A light response alone cannot justify a refund |
 | Buyer cannot or declines to use lights | Browser UI test | Alternative explains no return/payment action was sent |
 
 ## Trust boundaries
@@ -38,3 +38,13 @@ Use objects only, avoid faces and personal documents, request no microphone.
 The local browser uploads frames only to the same local service. Data stays in
 memory until expiry/eviction/restart unless explicitly downloaded. The later
 product's 30-day retention policy and consent flow are not implemented here.
+
+## Merchant-review foundation
+A match, nonmatch, weak signal or declined capture all leave financial proposals
+pending. Authenticated merchant approval binds the exact action and case inputs,
+expires, rejects altered payloads and is invalidated by case changes. The local
+API has no refund executor. A future executor must additionally check live
+PayPal ownership, stage and remaining balance immediately before dispatch.
+The merchant credential must never enter model prompts, buyer pages or public
+demo instructions. The current single-merchant token is a local foundation;
+production tenant/session authentication and live Postgres checks are unfinished.
