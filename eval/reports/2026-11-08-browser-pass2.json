@@ -1,0 +1,14 @@
+{
+  "source": "BROWSER_QA_FAKE_CAMERA",
+  "physical_validation": false,
+  "checks": [
+    "Consent is required before camera access",
+    "Escape cancels the sequence and releases the camera",
+    "Fake-camera recording uploads, analyzes, renders a report and exports NPZ",
+    "This fake camera test does not validate the physical gate",
+    "No horizontal overflow at 360, 390 and 768 px",
+    "Alternative path states no return/payment was sent",
+    "Camera denial gives a recovery instruction"
+  ],
+  "page_errors": []
+}

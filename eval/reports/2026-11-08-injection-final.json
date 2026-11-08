@@ -1,0 +1,12 @@
+{
+  "experiment": "untrusted-client adaptive synthetic injection",
+  "camera_used": false,
+  "physical_fixture": false,
+  "verdict": "VERIFIED",
+  "matches": 10,
+  "chance_p": 9.5367431640625e-07,
+  "correlation": 0.981741726398468,
+  "analysis_ms": 93.8,
+  "security_result": "BYPASS",
+  "interpretation": "A signed one-time challenge does not attest the source of uploaded frames."
+}

@@ -1,0 +1,73 @@
+# Progress
+
+## 8 Nov 2026: Phase 0 checkpoint
+
+**Gate NOT PASSED. Later phases have not started.** Physical recordings are
+pending. An actual local HTTP probe confirmed that the proposed client-upload
+trust boundary permits synthetic injected frames to pass without a camera.
+
+Budget: Phase 0 is capped at six hours in the brief. This first engineering
+checkpoint used less than one hour of elapsed session time; this is an
+estimate, not a measured engineering labor benchmark. No later-phase budget,
+cloud spend or model spend has been used. Do not imply all-day monitoring or
+unattended work after this chat turn ends.
+
+### Implemented and real
+- Local server and consented camera workbench with standard/reduced illumination.
+- Signed CSPRNG challenge, TTL, single use, same-origin/host restrictions and
+  upload bounds. The process secret and challenge records are not durable.
+- Frame sampling, rAF mutation log, device metadata and condition labels.
+- Provisional deterministic verifier, chromagram, trace, heatmap and NPZ export.
+- Offline CLI, JSON recovery tool, physical recording protocol and gate runner.
+- MIT license, build brief, design plan, source references, test workflow and docs.
+
+### Evidence
+- `.venv/bin/python -m pytest -q`: **23 passed**, one upstream test-client
+  deprecation warning. The tests use synthetic data, not physical recordings.
+- Ruff checks and formatting, JavaScript syntax, and dependency consistency pass.
+- Fake-camera Playwright QA: full capture -> analysis -> result -> NPZ download;
+  consent, Escape cancellation, alternative path and camera-denied recovery.
+  No horizontal overflow at 360/390/768 px. No JavaScript page errors in the final run.
+  Report: `eval/reports/2026-11-08-browser-final.json`.
+- Offline CLI reanalyzed `/tmp/pol-browser-fake-camera.npz`: INCONCLUSIVE, as
+  expected for fake media that does not receive the changing screen light.
+- Reproduction: `.venv/bin/python scripts/probe_injection.py` against the local
+  service. Saved run: VERIFIED, 10/10, correlation 0.9812927, without a camera.
+  Report: `eval/reports/2026-11-08-injection.json`. A second probe against the
+  final server also bypassed it with 10/10; saved in `2026-11-08-injection-final.json`.
+  These are individual laptop runs, not performance or security benchmarks.
+- Screenshots: `design/screenshots/pass1-*`, `pass2-*`, `final-*`; two revisions and critique in DESIGN_PLAN.
+
+### What is synthetic or absent
+All numerical fixtures, injection pixels and automated browser media are
+synthetic and labeled. Zero physical experiment recordings have been supplied.
+PayPal, Gemini, Agent Toolkit, APIMatic, Render, Kernel, durable claims, evidence
+PDFs, judge mode and the production frontend are not implemented. No hosted
+URL, refunds, dispute closure, submission, sponsor claim or measured FAR/FRR.
+CI configuration exists; no remote CI result has been observed.
+
+### Why the gate cannot be declared passed
+1. Need the actual 3-object x 3-light x 2-device capture matrix and three physical
+   attacks. See `scripts/record_fixture.md`. No fabricated physical fixtures.
+2. A printed photo can reflect illumination; expected rejection is unproven.
+3. A client can read the challenge and synthesize matching uploaded pixels and
+   timing. HMAC/TTL/nonce checks do not address this; the local probe reproduces it.
+4. The 20-bit guessing null is irrelevant to that adaptive attack.
+
+### User direction needed
+The original anti-injection promise cannot be supported by this implementation.
+Choose either a narrower capture-assistance product with merchant-reviewed money
+movement, or further investigation of trusted capture before building the PayPal
+product. Physical optics tests are still useful for either investigation, but
+passing them alone would not resolve this security failure.
+
+Do not progress to Phase 1 or connect this verdict to an autonomous refund while
+presenting it as fraud protection. This follows the user's explicit Phase 0
+stop/report requirement and the honesty rules, not a new approval requirement.
+
+### Saved checkpoint
+Implementation is saved in local commit `5ee0578`; documentation, screenshots
+and reports are saved in the following checkpoint commit. Gitleaks found no
+leaks in staged source, staged documentation or the initial commit history.
+No remote push or production deployment was performed. The local workbench
+remains available at http://127.0.0.1:8000 while its server session is running.
