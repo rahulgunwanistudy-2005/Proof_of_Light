@@ -292,9 +292,18 @@ const PRESETS = {
   },
 };
 
+// Software renderers (SwiftShader, llvmpipe) draw on the CPU; animating there
+// stalls the page, so those devices get a single still frame instead.
+function softwareRenderer(gl) {
+  const info = gl.getExtension("WEBGL_debug_renderer_info");
+  const name = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  return /swiftshader|llvmpipe|software|basic render/i.test(String(name));
+}
+
 export function mountLightStack(canvas, { preset = "hero", reducedMotion = false } = {}) {
   const gl = canvas.getContext("webgl2", { antialias: true, alpha: true, premultipliedAlpha: true });
   if (!gl) return null;
+  if (softwareRenderer(gl)) reducedMotion = true;
   const config = PRESETS[preset] || PRESETS.hero;
   const sheet = compile(gl, SHEET_VS, SHEET_FS);
   const mesh = compile(gl, MESH_VS, MESH_FS);
@@ -333,6 +342,7 @@ export function mountLightStack(canvas, { preset = "hero", reducedMotion = false
   const state = {
     pointer: [0, 0], eased: [0, 0], show: 0, showTarget: 0, flash: [1, 1, 1],
     running: false, visible: true, frame: 0, start: performance.now(), frozenAt: 1.6,
+    last: 0, slow: 0,
   };
   const spacing = 0.105;
   const top = ((config.layers.length - 1) * spacing) / 2;
@@ -420,6 +430,19 @@ export function mountLightStack(canvas, { preset = "hero", reducedMotion = false
 
   function loop(now) {
     if (!state.running) return;
+    // If frames keep taking longer than ~45 ms, freeze on a still frame.
+    if (state.last && document.visibilityState === "visible") {
+      state.slow = now - state.last > 45 ? state.slow + 1 : Math.max(0, state.slow - 1);
+      if (state.slow > 40) {
+        reducedMotion = true;
+        state.frozenAt = Math.max(0, (now - state.start) / 1000);
+        state.show = state.showTarget;
+        state.running = false;
+        draw(now);
+        return;
+      }
+    }
+    state.last = now;
     draw(now);
     state.frame = requestAnimationFrame(loop);
   }
