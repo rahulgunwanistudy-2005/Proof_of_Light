@@ -19,6 +19,8 @@ from paypalserversdk.configuration import Environment, Server
 from paypalserversdk.exceptions.api_exception import ApiException
 from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
 from paypalserversdk.models.order_request import OrderRequest
+from paypalserversdk.models.order_tracker_request import OrderTrackerRequest
+from paypalserversdk.models.refund_request import RefundRequest
 from paypalserversdk.paypal_serversdk_client import PaypalServersdkClient
 
 CATALOG = {
@@ -83,7 +85,7 @@ class SandboxCheckout:
         self._lock = threading.RLock()
         self._sleep = sleep
 
-    def _call(self, operation, options, key=None) -> PayPalResult:
+    def _call(self, operation, options, key=None, *, retry=True) -> PayPalResult:
         with self._lock:  # Protect the shared SDK's OAuth cache across worker threads.
             for attempt in range(3):
                 try:
@@ -92,7 +94,7 @@ class SandboxCheckout:
                     return PayPalResult(data, result.status_code, debug_id(result.headers), key)
                 except ApiException as exc:
                     status = exc.response_code
-                    if (status == 429 or 500 <= status <= 599) and attempt < 2:
+                    if retry and (status == 429 or 500 <= status <= 599) and attempt < 2:
                         # Same idempotency key on every retry. The SDK retry layer
                         # stays off so nested retries cannot multiply requests.
                         self._sleep(0.25 * 2**attempt + random.uniform(0, 0.15))
@@ -108,31 +110,42 @@ class SandboxCheckout:
                     raise PayPalFailure("outcome_unknown_reconcile_before_retry") from None
         raise RuntimeError("Unreachable retry state")
 
-    def create_order(self, sku: str, operation_id: str) -> PayPalResult:
+    def create_order(
+        self, sku: str, operation_id: str, *, return_url=None, cancel_url=None
+    ) -> PayPalResult:
         product = CATALOG.get(sku)
         if product is None:
             raise ValueError("Product not found")
         minor = product["amount_minor"]
         money = {"currency_code": product["currency"], "value": f"{minor // 100}.{minor % 100:02d}"}
-        body = OrderRequest.from_dictionary(
-            {
-                "intent": "CAPTURE",
-                "purchase_units": [
-                    {
-                        "custom_id": operation_id,
-                        "amount": {**money, "breakdown": {"item_total": money}},
-                        "items": [
-                            {
-                                "name": product["name"],
-                                "sku": sku,
-                                "quantity": "1",
-                                "unit_amount": money,
-                            }
-                        ],
+        payload = {
+            "intent": "CAPTURE",
+            "purchase_units": [
+                {
+                    "custom_id": operation_id,
+                    "amount": {**money, "breakdown": {"item_total": money}},
+                    "items": [
+                        {
+                            "name": product["name"],
+                            "sku": sku,
+                            "quantity": "1",
+                            "unit_amount": money,
+                        }
+                    ],
+                }
+            ],
+        }
+        if return_url and cancel_url:
+            payload["payment_source"] = {
+                "paypal": {
+                    "experience_context": {
+                        "return_url": return_url,
+                        "cancel_url": cancel_url,
+                        "user_action": "PAY_NOW",
                     }
-                ],
+                }
             }
-        )
+        body = OrderRequest.from_dictionary(payload)
         key = request_id("create_order", operation_id)
         return self._call(
             self._sdk.orders.create_order,
@@ -150,6 +163,45 @@ class SandboxCheckout:
         return self._call(
             self._sdk.orders.capture_order,
             {"id": order_id, "paypal_request_id": key, "prefer": "return=representation"},
+            key,
+        )
+
+    def add_tracking(self, order_id: str, capture_id: str, carrier: str, tracking_number: str):
+        self._order_id(order_id)
+        self._order_id(capture_id)
+        body = OrderTrackerRequest(
+            capture_id=capture_id,
+            carrier=carrier,
+            tracking_number=tracking_number,
+            notify_payer=False,
+        )
+        return self._call(
+            self._sdk.orders.create_order_tracking, {"id": order_id, "body": body}, retry=False
+        )
+
+    def access_token(self) -> str:
+        with self._lock:
+            auth = self._sdk.auth_managers["Oauth2"]
+            if not auth.is_valid():
+                raise PayPalFailure("sandbox_authentication_failed")
+            return auth._o_auth_token.access_token
+
+    def refund(self, capture_id: str, amount_minor: int, currency: str, key: str) -> PayPalResult:
+        self._order_id(capture_id)
+        if currency != "USD":
+            raise ValueError("Sandbox refunds currently support USD orders")
+        value = f"{amount_minor // 100}.{amount_minor % 100:02d}"
+        body = RefundRequest.from_dictionary(
+            {"amount": {"currency_code": currency, "value": value}}
+        )
+        return self._call(
+            self._sdk.payments.refund_captured_payment,
+            {
+                "capture_id": capture_id,
+                "body": body,
+                "paypal_request_id": key,
+                "prefer": "return=representation",
+            },
             key,
         )
 

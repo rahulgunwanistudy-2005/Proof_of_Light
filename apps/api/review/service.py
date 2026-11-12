@@ -61,9 +61,13 @@ def audit(db: Session, case: Case, actor: str, event: str, details: dict):
     db.flush()
 
 
-def create_case(db: Session, merchant_id: str, snapshot: CaseSnapshot) -> Case:
+def create_case(
+    db: Session, merchant_id: str, snapshot: CaseSnapshot, *, case_id: str | None = None
+) -> Case:
     payload = snapshot.model_dump(mode="json")
     case = Case(merchant_id=merchant_id, inputs_hash=digest(payload), snapshot=payload)
+    if case_id is not None:
+        case.id = case_id
     db.add(case)
     db.flush()
     audit(db, case, merchant_id, "case_created", {"inputs_hash": case.inputs_hash})

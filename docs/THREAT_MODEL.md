@@ -1,4 +1,4 @@
-# Phase 0 threat model
+# Threat model
 
 The question this implementation can measure is whether uploaded pixels follow
 the supplied light sequence. It cannot establish that the pixels came from a
@@ -34,17 +34,7 @@ browser QA are explicitly excluded. Passing that small test would still not
 resolve adaptive injection or prove production FAR/FRR.
 
 ## Privacy
-Use objects only, avoid faces and personal documents, request no microphone.
-The local browser uploads frames only to the same local service. Data stays in
-memory until expiry/eviction/restart unless explicitly downloaded. The later
-product's 30-day retention policy and consent flow are not implemented here.
+Aim the camera at the item and keep faces and personal documents out of the frame. The app requests camera video. Temporary capture bundles expire from memory. When the buyer submits evidence, the server retains a re-encoded JPEG, statement and compact report in the case database. Sending the JPEG and statement to Gemini requires buyer opt-in and a merchant request. Automatic retention remains pending.
 
-## Merchant-review foundation
-A match, nonmatch, weak signal or declined capture all leave financial proposals
-pending. Authenticated merchant approval binds the exact action and case inputs,
-expires, rejects altered payloads and is invalidated by case changes. The local
-API has no refund executor. A future executor must additionally check live
-PayPal ownership, stage and remaining balance immediately before dispatch.
-The merchant credential must never enter model prompts, buyer pages or public
-demo instructions. The current single-merchant token is a local foundation;
-production tenant/session authentication and live Postgres checks are unfinished.
+## Merchant review
+The exact proposal, case revision and authorization are checked again at refund send time. The sandbox order must contain the matching completed capture. The outbox keeps a stable request ID and a unique capture reservation. Interrupted responses are recorded for reconciliation. Payment access uses one merchant credential, kept separate from the buyer invitation. Local PostgreSQL passed the browser practice flow. Live PayPal responses and cloud multi-user operation still need verification.

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Merchant review · Proof of Light</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/workspace.css">
+  <script type="module" src="/static/merchant.js"></script>
+</head>
+<body>
+<header class="workspace-header">
+  <a class="wordmark" href="/">Proof of Light</a>
+  <nav class="workspace-nav" aria-label="Main navigation"><a href="/">Capture lab</a><a href="/shop">Sandbox shop</a></nav>
+</header>
+<main class="workspace">
+  <h1>Merchant review</h1>
+  <p class="lede">Invite a buyer, review their evidence, and authorize the exact financial action.</p>
+  <p id="notice" class="notice" role="status" aria-live="polite"></p>
+  <form id="login" class="sheet stack">
+    <label for="merchant-token">Merchant access token</label>
+    <input id="merchant-token" name="merchantToken" type="password" autocomplete="off" required>
+    <div class="actions"><button class="primary" type="submit">Open cases</button></div>
+  </form>
+  <div id="workspace" class="review-grid" hidden>
+    <aside class="sheet stack" aria-label="Case list">
+      <h2>Cases</h2>
+      <div id="case-list" class="case-list"></div>
+      <button id="new-demo" class="secondary" type="button">Create practice case</button>
+      <button id="refresh" class="secondary" type="button">Refresh cases</button>
+      <button id="sign-out" class="secondary" type="button">Sign out</button>
+    </aside>
+    <div>
+      <details class="sheet">
+        <summary>Add a case manually</summary>
+        <form id="new-case" class="stack">
+          <div class="form-grid">
+            <label>PayPal order ID<input name="order" required maxlength="100"></label>
+            <label>PayPal capture ID<input name="capture" maxlength="100"></label>
+            <label>PayPal dispute ID<input name="dispute" maxlength="100"></label>
+            <label>Purchase amount (USD)<input name="amount" type="number" min="0.01" max="1000000" step="0.01" required></label>
+          </div>
+          <div class="actions"><button class="secondary" type="submit">Save case</button></div>
+        </form>
+      </details>
+      <div id="orders" class="sheet" hidden></div>
+      <section id="disputes" class="sheet" hidden></section>
+      <div id="case-detail"></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

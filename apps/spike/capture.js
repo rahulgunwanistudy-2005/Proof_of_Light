@@ -1,6 +1,7 @@
 // Browser APIs: MDN getUserMedia and requestVideoFrameCallback; see docs/REFERENCES.md.
 const $ = (id) => document.getElementById(id);
 const video = $("preview");
+const claimToken = location.pathname === "/claim" ? location.hash.slice(1) : undefined;
 let stream = null, running = false, aborted = false, busy = false;
 let lastBundle = null;
 const colorNames = ["red", "green", "blue", "yellow"];
@@ -69,6 +70,11 @@ $("enable").addEventListener("click", async () => {
   } finally { busy = false; buttons(); }
 });
 $("alternative").addEventListener("click", () => {
+  if (claimToken) {
+    $("claim-panel").scrollIntoView({ block: "start" });
+    $("claim-notice").textContent = "You can send a photo or statement without changing lights.";
+    return;
+  }
   stopCamera();
   status("Changing lights are optional. In the future claims flow, this path will request a return-based resolution. No return request or payment is sent in this physics experiment.");
 });
@@ -124,6 +130,7 @@ async function upload(bundle) {
   status("Analyzing the recorded light response on the local server…");
   const result = await post("/api/captures", bundle);
   displayResult(result, bundle.challenge);
+  if (claimToken) document.dispatchEvent(new CustomEvent("pol-capture", {detail: {id: result.id}}));
   lastBundle = null;
 }
 $("start").addEventListener("click", async () => {
@@ -135,7 +142,7 @@ $("start").addEventListener("click", async () => {
   const conditions = {object: $("object").value, lighting: $("lighting").value,
     distance_cm: Number($("distance").value), source: "browser-camera-physical-label-unverified"};
   try {
-    const challenge = await post("/api/challenges", {reduced: $("reduced").checked});
+    const challenge = await post("/api/challenges", {reduced: $("reduced").checked, claim_token: claimToken});
     const field = $("light-field"); field.hidden = false;
     $("inset").prepend(video); $("abort").focus();
     field.style.backgroundColor = "rgb(150,150,150)";

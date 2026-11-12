@@ -1,0 +1,45 @@
+.workspace { max-width: 1120px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.workspace-header { max-width: 1120px; margin: 0 auto; padding: 1.3rem 1.5rem; }
+.workspace-nav { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.1rem; }
+.workspace-nav a { color: #294e7d; font-weight: 600; font-size: .89rem; text-decoration: none; }
+.workspace-nav a:hover { text-decoration: underline; }
+.workspace h1 { font-size: clamp(2.3rem, 5vw, 4.3rem); margin-bottom: .35rem; }
+.workspace h2 { font-size: 1.28rem; margin: 0 0 .8rem; }
+.workspace h3 { font-size: 1.04rem; margin: 0 0 .6rem; }
+.workspace .lede { max-width: 48rem; color: #405974; margin-bottom: 1.75rem; }
+.workspace .review-grid { display: grid; grid-template-columns: minmax(210px, 1fr) minmax(0, 3fr); gap: 1.3rem; align-items: start; }
+.sheet { background: #fff; border: 1px solid #d4e0ed; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; }
+.sheet.tinted { background: #eaf1f9; }
+.stack { display: grid; gap: .8rem; }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.sheet label:not(.check) { display: grid; gap: .35rem; font-weight: 600; font-size: .88rem; }
+.sheet input:not([type=checkbox]), .sheet textarea, .sheet select { width: 100%; min-width: 0; border: 1px solid #a9bed5; border-radius: 6px; padding: .65rem; background: white; color: #172e50; font: inherit; }
+.sheet textarea { resize: vertical; }
+.sheet .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; }
+.case-list { display: grid; gap: .45rem; max-height: 28rem; overflow-y: auto; }
+.case-list button { width: 100%; text-align: left; overflow-wrap: anywhere; }
+.case-list button[aria-current=true] { background: #244f88; color: white; }
+.workspace .notice { color: #405974; margin: .4rem 0; white-space: pre-wrap; }
+.workspace .notice.error, .sheet .notice.error { color: #9c2b49; }
+.workspace .notice:empty { display: none; }
+.evidence-photo { display: block; max-width: 100%; max-height: 300px; object-fit: contain; object-position: left; border-radius: 7px; margin: .8rem 0; }
+.detail-pairs { display: grid; grid-template-columns: max-content 1fr; gap: .4rem .8rem; margin: .7rem 0; overflow-wrap: anywhere; }
+.detail-pairs dt { font-weight: 600; }
+.detail-pairs dd { margin: 0; }
+.action-card { padding: .9rem 0; border-top: 1px solid #d4e0ed; overflow-wrap: anywhere; }
+.action-card .check { margin: .65rem 0; }
+.product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.product-swatch { aspect-ratio: 1; border-radius: 6px; margin-bottom: .85rem; background-image: url("/static/catalog-ceramics.png"); background-size: 300% auto; background-repeat: no-repeat; }
+.product-swatch.mug { background-color: #d7e5f3; background-position: left center; }
+.product-swatch.bowl { background-color: #e1e8d6; background-position: center; }
+.product-swatch.plate { background-color: #ecdccf; background-position: right center; }
+.claim-panel { margin: 1.5rem 0; max-width: 46rem; }
+.chip-row { display: flex; gap: .25rem; margin: .35rem 0; }
+.chip-row span { display: block; width: 1.25rem; height: 1rem; border: 1px solid #a9bed5; border-radius: 3px; }
+@media (max-width: 720px) {
+  .workspace { padding: 1rem 1rem 3rem; }
+  .workspace-header { padding: 1rem; }
+  .workspace .review-grid, .product-grid { grid-template-columns: 1fr; }
+  .workspace h1 { font-size: clamp(2rem, 8vw, 3rem); }
+}
+@media (max-width: 440px) { .form-grid { grid-template-columns: 1fr; } }

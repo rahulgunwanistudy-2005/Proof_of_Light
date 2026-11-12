@@ -109,3 +109,26 @@ def test_cached_oauth_token_and_capture_wire_path():
 def test_production_environment_is_rejected():
     with pytest.raises(ValueError, match="sandbox only"):
         SandboxCheckout("client", "secret", environment="production")
+
+
+def test_refund_wire_amount_and_merchant_request_id():
+    paypal, stub = client()
+    key = "b" * 32
+    paypal.refund("9AB1234567890", 1205, "USD", key)
+    request = stub.requests[-1]
+    assert request.url.endswith("/v2/payments/captures/9AB1234567890/refund")
+    assert request.headers["PayPal-Request-Id"] == key
+    assert json.loads(request.body)["amount"] == {"currency_code": "USD", "value": "12.05"}
+
+
+def test_checkout_return_url_is_serialized_in_paypal_experience_context():
+    paypal, stub = client()
+    paypal.create_order(
+        "KA-MUG-01",
+        "local-operation-123",
+        return_url="https://example.com/shop",
+        cancel_url="https://example.com/shop?cancelled=1",
+    )
+    source = json.loads(stub.requests[-1].body)["payment_source"]["paypal"]["experience_context"]
+    assert source["return_url"] == "https://example.com/shop"
+    assert source["cancel_url"] == "https://example.com/shop?cancelled=1"

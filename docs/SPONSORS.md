@@ -2,9 +2,9 @@
 
 | Service | Intended role | Current status |
 | --- | --- | --- |
-| PayPal sandbox + Agent Toolkit | Orders, disputes, payments and claims tools | Checkout SDK adapter implemented and stub-tested; real transactions and Agent Toolkit pending |
-| Render | API, frontend, database, jobs and poller | Not deployed; no resources created |
-| Google Gemini | Structured damage assessment and red-team image generation | Not started; no model ID guessed |
+| PayPal sandbox + Agent Toolkit | Orders, disputes, payments and claims tools | Checkout, tracking, disputes and approved capture refunds are wired. Stubbed integration checks passed. Real sandbox transactions and Agent Toolkit remain pending. |
+| Render | API, frontend, database, jobs and poller | Web and PostgreSQL Blueprint passes public schema validation. Provisioning and Workflows remain pending. |
+| Google Gemini | Structured damage assessment and red-team image generation | Consented structured image notes are wired. Live model verification needs a Gemini key. |
 | APIMatic Context Plugin | PayPal integration guidance | Official context package installed; Python skills/source used for checkout integration |
 | Kernel | Sandbox dispute seeding | Not started |
 | AG Grid | Optional later claims desk | Deferred stretch scope |

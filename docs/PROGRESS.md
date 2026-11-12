@@ -1,5 +1,13 @@
 # Progress
 
+## 12 Nov 2026 — Local buyer and merchant workflow
+
+The buyer invitation, optional photo or guided capture, merchant case review, approval and evidence PDF work in the running application. Browser verification used Chromium's simulated camera on disposable SQLite and PostgreSQL databases. Render's published Blueprint schema accepted `render.yaml`. The SDK request and checkout-to-refund tests use stubbed responses. The updated suite passes 63 tests. Browser evidence is in `eval/reports/2026-11-12-review-browser.json` and the practice screenshots are in `design/screenshots/`.
+
+The app now includes sandbox checkout and capture, tracking, dispute listing and verified webhook intake, opt-in Gemini notes, and a separate merchant-authorized USD refund send. The deadline build uses same-origin static JavaScript served by FastAPI and PayPal's hosted approval redirect. It does not use React, JS SDK v6, Agent Toolkit or Render Workflows. Dispute decisions remain in PayPal's Resolution Center. A practice case is available to the authenticated merchant. A public judge flow and live sandbox transactions remain pending.
+
+PayPal and Gemini credentials were absent at verification. Hosted release still needs exact publication approval and a Render workspace. `DEPLOY.md` describes the verification steps and `VIDEO_SCRIPT.md` and `DEVPOST.md` contain recording and submission drafts.
+
 ## 8 Nov 2026: approved capture-assistance pivot and review foundation
 
 The user chose: "Revise the pitch to a capture-assistance tool; keep money movement
@@ -34,7 +42,7 @@ pending. Approval returns AWAITING_EXECUTOR and paypal_executed=false.
 External inputs requested: choose Render workspace (My Workspace or mnb) and add
 PayPal sandbox client ID/secret plus Gemini key to the existing ignored `.env`.
 Do not paste credentials into chat. No Render resources have been created and
-there is no production deployment. The prepared `scripts/check_sandbox.py` only
+there is no production deployment. The prepared `python -m scripts.check_sandbox` only
 checks a token exchange once credentials are available; it creates no orders or
 financial actions.
 

@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: proof-of-light
+    runtime: python
+    plan: 0.5c-512mb
+    healthCheckPath: /health
+    buildCommand: pip install -r requirements-dev.lock && pip install --no-deps -e .
+    preDeployCommand: alembic upgrade head
+    startCommand: uvicorn apps.api.main:app --host 0.0.0.0 --port "$PORT" --workers 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.11
+      - key: DATABASE_URL
+        fromDatabase:
+          name: proof-of-light-db
+          property: connectionString
+      - key: POL_MERCHANT_ID
+        value: kiln-and-ash
+      - key: POL_MERCHANT_TOKEN
+        generateValue: true
+      - key: PAYPAL_ENVIRONMENT
+        value: sandbox
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+
+databases:
+  - name: proof-of-light-db
+    plan: basic-256mb
+    databaseName: proof_of_light
+    ipAllowList: []

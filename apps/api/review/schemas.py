@@ -25,6 +25,9 @@ class CaseSnapshot(StrictModel):
     claim_text: str = Field(default="", max_length=8000)
     light_response: str = Field(default="NOT_RECORDED", max_length=40)
     assessment: dict = Field(default_factory=dict)
+    evidence_id: str | None = Field(default=None, max_length=36)
+    provider_dispute: dict = Field(default_factory=dict)
+    shipment: dict = Field(default_factory=dict)
 
 
 class FinancialAction(StrictModel):

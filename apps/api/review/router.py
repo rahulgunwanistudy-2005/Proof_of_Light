@@ -104,7 +104,8 @@ def detail(case_id: str, db: DB, actor: Merchant):
                 "status": a.status,
                 "payload": a.payload,
                 "request_id": a.request_id,
-                "paypal_executed": False,
+                "paypal_executed": a.status == "COMPLETED",
+                "provider_result": a.provider_result,
             }
             for a in actions
         ],
@@ -135,7 +136,7 @@ def approve(proposal_id: str, body: Approve, db: DB, actor: Merchant):
             "status": action.status,
             "request_id": action.request_id,
             "paypal_executed": False,
-            "message": "Approval saved. The PayPal executor is not connected.",
+            "message": "Approval saved. Review the action before sending it to PayPal.",
         }
 
 

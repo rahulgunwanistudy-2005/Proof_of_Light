@@ -1,0 +1,8 @@
+{
+  "browser_flow": "passed",
+  "capture": "Chromium simulated camera",
+  "merchant_review": "saved",
+  "evidence_pdf": "downloaded",
+  "live_paypal": false,
+  "browser_errors": []
+}

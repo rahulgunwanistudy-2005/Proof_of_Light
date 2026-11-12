@@ -49,3 +49,7 @@ wheel and retrying succeeded. No SDK source was edited or vendored.
 Gemini, PayPal Agent Toolkit, Kernel and Render Workflows are not yet used.
 Render workspace discovery found two workspaces; user selection is pending and
 no resources have been created. No outreach or external message was sent.
+
+## 12 Nov 2026 workflow build
+
+Codex used the installed PayPal Python skills and SDK source to wire sandbox checkout, tracking and refund payloads. Firecrawl retrieved official PayPal, Gemini and Render documentation. Built-in ImageGen produced `apps/spike/catalog-ceramics.png`, a triptych of a misty blue mug, olive bowl and sand-pink plate under diffused studio light. The app uses the contact sheet for sandbox catalog illustrations.

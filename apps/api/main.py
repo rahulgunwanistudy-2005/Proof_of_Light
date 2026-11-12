@@ -6,6 +6,7 @@ FastAPI/Pydantic reference: https://fastapi.tiangolo.com/tutorial/body/
 import base64
 import io
 import json
+import os
 import secrets
 import threading
 import time
@@ -23,6 +24,13 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from apps.api.paypal import disputes, refunds  # noqa: F401 - register refund route
+from apps.api.paypal.checkout import PayPalFailure
+from apps.api.paypal.config import configured, public_origin
+from apps.api.paypal.shop import provider_error
+from apps.api.review import assessment, packet  # noqa: F401 - register evidence routes
+from apps.api.review.claims import claim_owner, jpeg
+from apps.api.review.claims import router as claim_router
 from apps.api.review.router import router as review_router
 from apps.api.review.service import ReviewError
 
@@ -30,13 +38,19 @@ ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
 app = FastAPI(title="Proof of Light capture assistance", version="0.1.0")
 app.include_router(review_router)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
+app.include_router(claim_router)
+app.include_router(disputes.router)
+allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
+if render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+    allowed_hosts.append(render_host)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 SECRET = secrets.token_bytes(32)
 LOCK = threading.Lock()
 CHALLENGES: dict[str, dict] = {}
-CAPTURES: dict[str, tuple[float, bytes, dict]] = {}
+CAPTURES: dict[str, tuple[float, bytes, dict, str | None, bytes | None]] = {}
 ISSUANCE: dict[str, list[float]] = {}
 MAX_UPLOAD = 16 * 1024 * 1024
+CHECKOUT_STARTS: dict[str, list[float]] = {}
 
 
 @app.exception_handler(ReviewError)
@@ -46,12 +60,31 @@ async def review_error(request: Request, error: ReviewError):
     return JSONResponse(status_code=error.status, content={"detail": str(error)})
 
 
+@app.exception_handler(PayPalFailure)
+async def paypal_error(request: Request, error: PayPalFailure):
+    from fastapi.responses import JSONResponse
+
+    translated = provider_error(error)
+    return JSONResponse({"detail": translated.detail}, status_code=translated.status_code)
+
+
 @app.middleware("http")
 async def local_limits(request: Request, call_next):
     if request.method in {"POST", "PUT", "PATCH"}:
         origin = request.headers.get("origin")
-        if origin and origin != str(request.base_url).rstrip("/"):
+        if origin and origin != public_origin(request):
             return Response("Use the capture page on this server.", status_code=403)
+        if request.method == "POST" and request.url.path == "/api/shop/orders":
+            with LOCK:
+                now = time.time()
+                for key, times in list(CHECKOUT_STARTS.items()):
+                    CHECKOUT_STARTS[key] = [stamp for stamp in times if now - stamp < 60]
+                    if not CHECKOUT_STARTS[key]:
+                        del CHECKOUT_STARTS[key]
+                host = request.client.host if request.client else "unknown"
+                if len(CHECKOUT_STARTS) >= 100 or len(CHECKOUT_STARTS.get(host, [])) >= 10:
+                    return Response("Too many checkouts. Try again in a minute.", status_code=429)
+                CHECKOUT_STARTS.setdefault(host, []).append(now)
         # Count streamed bytes rather than trusting a supplied Content-Length.
         body = bytearray()
         async for chunk in request.stream():
@@ -87,6 +120,7 @@ def cleanup():
 
 class Start(BaseModel):
     reduced: bool = False
+    claim_token: str | None = Field(default=None, max_length=43)
 
 
 class Capture(BaseModel):
@@ -102,11 +136,12 @@ class Capture(BaseModel):
 def health():
     return {
         "status": "ok",
-        "phase": "1-foundation",
+        "phase": "merchant-review",
         "product": "capture-assistance",
         "physical_gate": "pending",
         "financial_actions": "merchant approval required",
-        "paypal": "not integrated",
+        "paypal": "sandbox configured" if configured() else "sandbox credentials needed",
+        "gemini": "configured" if os.getenv("GEMINI_API_KEY") else "key needed",
     }
 
 
@@ -120,7 +155,11 @@ def start(body: Start, request: Request):
             raise HTTPException(429, "Too many starts. Wait a minute and try again.")
         recent.append(time.time())
         challenge = issue(SECRET, body.reduced)
-        CHALLENGES[challenge["id"]] = {"challenge": challenge, "used": False}
+        CHALLENGES[challenge["id"]] = {
+            "challenge": challenge,
+            "used": False,
+            "owner": claim_owner(body.claim_token),
+        }
         return challenge
 
 
@@ -175,6 +214,11 @@ async def capture(body: Capture):
         record["used"] = True
     try:
         data, report = await run_in_threadpool(decode_and_verify, body)
+        preview = (
+            jpeg(base64.b64decode(body.frames[len(body.frames) // 2]))
+            if record.get("owner")
+            else None
+        )
     except (ValueError, KeyError, TypeError, UnidentifiedImageError) as exc:
         raise HTTPException(
             422, f"Capture could not be read: {exc}. Start a fresh capture."
@@ -182,7 +226,7 @@ async def capture(body: Capture):
     with LOCK:
         while len(CAPTURES) >= 4:
             del CAPTURES[next(iter(CAPTURES))]
-        CAPTURES[body.challenge["id"]] = (time.time(), data, report)
+        CAPTURES[body.challenge["id"]] = (time.time(), data, report, record.get("owner"), preview)
     return {
         "id": body.challenge["id"],
         "report": report,
@@ -204,9 +248,36 @@ def download(capture_id: str):
         )
 
 
+def claim_capture(capture_id: str, token: str):
+    with LOCK:
+        cleanup()
+        entry = CAPTURES.get(capture_id)
+        if entry is None or entry[3] != claim_owner(token) or entry[4] is None:
+            raise ReviewError("Capture expired or belongs to a different invitation.", 422)
+        report = {key: value for key, value in entry[2].items() if key not in {"trace", "heatmap"}}
+        return entry[4], report
+
+
+app.state.claim_capture = claim_capture
+
+
 @app.get("/")
+@app.get("/lab")
+@app.get("/claim")
 def index():
     return FileResponse(ROOT / "apps/spike/index.html")
+
+
+@app.get("/merchant")
+@app.get("/console")
+def merchant_page():
+    return FileResponse(ROOT / "apps/spike/merchant.html")
+
+
+@app.get("/shop")
+@app.get("/store")
+def shop_page():
+    return FileResponse(ROOT / "apps/spike/shop.html")
 
 
 app.mount("/static", StaticFiles(directory=ROOT / "apps/spike"), name="static")

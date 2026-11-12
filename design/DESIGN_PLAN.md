@@ -56,3 +56,7 @@ light field is open; Escape cancels. No decorative motion was added.
 
 Final screenshots use the final-* prefix. Result screenshots always come from
 Chromium fake media and do not establish physical camera performance.
+
+## Claim and merchant workflow
+
+Keep the capture screen's navy, pale blue and paper palette. Use the existing serif headings and system sans for forms. Add two views with the same horizontal navigation. The buyer sees the invitation context, a short statement field, and either the camera or photo upload. The merchant sees a narrow case list beside a wide evidence sheet, then the exact refund destination and amount above the approval controls. On phones these sections stack in reading order. Use the recorded frame and chromagram as the visual anchors. Catalog tiles use color fields and object names until product photography is available. Keep provider status beside the action it affects. This keeps the design centered on evidence and decisions and avoids decorative dashboard cards or metrics.

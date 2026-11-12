@@ -60,6 +60,8 @@ class Outbox(Base):
     payload: Mapped[dict] = mapped_column(JSON)
     status: Mapped[str] = mapped_column(String(40), default="AWAITING_EXECUTOR")
     attempts: Mapped[int] = mapped_column(default=0)
+    provider_result: Mapped[dict | None] = mapped_column(JSON)
+    refund_capture_id: Mapped[str | None] = mapped_column(String(32), index=True, unique=True)
     created_at: Mapped[float] = mapped_column(default=time.time)
 
 
@@ -72,4 +74,39 @@ class Audit(Base):
     event: Mapped[dict] = mapped_column(JSON)
     previous_hash: Mapped[str] = mapped_column(String(64))
     entry_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[float] = mapped_column(default=time.time)
+
+
+class Invitation(Base):
+    __tablename__ = "claim_invitations"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    case_id: Mapped[str] = mapped_column(ForeignKey("review_cases.id"), index=True)
+    expires_at: Mapped[float]
+    used_at: Mapped[float | None]
+
+
+class Evidence(Base):
+    __tablename__ = "claim_evidence"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    case_id: Mapped[str] = mapped_column(ForeignKey("review_cases.id"), index=True)
+    statement: Mapped[str] = mapped_column(String(8000))
+    image_jpeg: Mapped[bytes | None]
+    light_report: Mapped[dict] = mapped_column(JSON)
+    assessment: Mapped[dict] = mapped_column(JSON, default=dict)
+    ai_consent: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[float] = mapped_column(default=time.time)
+
+
+class CheckoutOrder(Base):
+    __tablename__ = "shop_orders"
+    id: Mapped[str] = mapped_column(String(48), primary_key=True)
+    merchant_id: Mapped[str] = mapped_column(String(80), index=True)
+    sku: Mapped[str] = mapped_column(String(32))
+    amount_minor: Mapped[int]
+    currency: Mapped[str] = mapped_column(String(3))
+    paypal_id: Mapped[str | None] = mapped_column(String(32), unique=True)
+    capture_id: Mapped[str | None] = mapped_column(String(32), unique=True)
+    approval_url: Mapped[str | None] = mapped_column(String(2000))
+    tracking: Mapped[dict | None] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(30), default="CREATING")
     created_at: Mapped[float] = mapped_column(default=time.time)
