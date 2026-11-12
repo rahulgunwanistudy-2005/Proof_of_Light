@@ -21,6 +21,7 @@ jobs:
       - name: Verify buyer and merchant flows in Chromium
         env:
           DATABASE_URL: sqlite:////tmp/proof-of-light-ci.db
+          POL_MERCHANT_ID: ci-merchant
           POL_MERCHANT_TOKEN: proof-of-light-browser-fixture-00000000000000
         run: |
           alembic upgrade head
