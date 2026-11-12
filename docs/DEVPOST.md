@@ -4,7 +4,7 @@ Proof of Light gives buyers a guided way to document item condition and merchant
 
 The light sequence provides a diagnostic signal. During development, an adaptive synthetic upload produced a matching result without a physical camera. We kept the measurement advisory and designed alternate submission paths for buyers who skip or cannot complete the sequence. Gemini can add structured notes about visible condition and uncertainty when the buyer opts in. The merchant authorizes financial actions.
 
-Built with FastAPI, SQLAlchemy, Alembic, PostgreSQL, the PayPal Server SDK and APIMatic context, PayPal sandbox APIs, Gemini structured output, and a Render Blueprint. The local practice flow and stubbed provider tests passed. Add live provider results, hosted URL and the recorded video to the submission after verification. Sponsor eligibility and deployment status still need confirmation.
+Built with FastAPI, SQLAlchemy, Alembic, PostgreSQL, the PayPal Server SDK and APIMatic context, PayPal sandbox APIs, Gemini structured output, and a Render Blueprint. The local practice flow and stubbed provider tests passed. The hosted demo runs at https://proof-of-light-hjpt.onrender.com (PayPal sandbox only). Add live provider results and the recorded video to the submission after verification. Sponsor eligibility and deployment status still need confirmation.
 
 ## Judge testing instructions
 

@@ -2,7 +2,28 @@
 
 Proof of Light helps buyers submit item evidence and gives merchants a case file to review before a refund. A buyer can record a guided light response, upload a photo, or send a statement. The merchant reviews the exact amount and destination before sending a PayPal sandbox refund.
 
-The practice flow runs without login or provider keys. PayPal checkout and refund tests use stubbed responses. Live PayPal, Gemini and hosted deployment need configuration. The [product brief](docs/PRODUCT_BRIEF.md) describes the capture-assistance scope.
+**Live demo: [proof-of-light-hjpt.onrender.com](https://proof-of-light-hjpt.onrender.com)** · PayPal sandbox only, no real money moves. The free Render instance may take up to a minute to wake after idling.
+
+![The landing page hero: a WebGL stack of evidence layers with a camera lens, cycling through the capture palette in light show mode](design/media/light-stack.gif)
+
+The practice flow runs without login or provider keys. PayPal checkout and refund tests use stubbed responses; the hosted site uses PayPal sandbox credentials kept server-side. The [product brief](docs/PRODUCT_BRIEF.md) describes the capture-assistance scope.
+
+## Try it in two minutes
+
+1. Open [Try a practice case](https://proof-of-light-hjpt.onrender.com/practice) and select **Start practice case**. No login or keys are needed.
+2. Select **Open buyer form**, write a short statement, tick the sharing consent and send the evidence. A guided light capture is optional and needs a camera.
+3. Back on the practice tab, refresh the case, download the evidence PDF, prepare a refund and approve the exact amount. Practice approvals are saved locally and never call PayPal.
+4. The [sandbox shop](https://proof-of-light-hjpt.onrender.com/shop) opens PayPal's real sandbox approval page for a test purchase.
+
+| Landing | How it works | Light show |
+| --- | --- | --- |
+| ![Landing page hero](design/screenshots/redesign-hero.png) | ![Numbered step cards with 3D layer icons](design/screenshots/redesign-steps.png) | ![Hero with light show on](design/screenshots/redesign-light-show.png) |
+
+| Merchant practice case | Sandbox shop | Phone |
+| --- | --- | --- |
+| ![Merchant practice case](design/screenshots/merchant-practice.png) | ![Kiln and Ash sandbox shop](design/screenshots/redesign-shop.png) | ![Landing page at 390 px](design/screenshots/final-390px.png) |
+
+The hero is an original raw WebGL2 scene, and the layer icons are CSS 3D; [DESIGN.md](DESIGN.md) covers the reference, the motion rules and the fallbacks.
 
 ## Run locally
 
