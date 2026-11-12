@@ -79,7 +79,12 @@ with sync_playwright() as playwright:
         shop.goto(f"{args.base}/shop")
         shop.wait_for_load_state("networkidle")
         expect(shop.get_by_role("button", name="Continue to PayPal")).to_have_count(3)
-        expect(shop.get_by_role("button", name="Continue to PayPal").first).to_be_disabled()
+        pay_button = shop.get_by_role("button", name="Continue to PayPal").first
+        health = shop.request.get(f"{args.base}/health").json()
+        if health["paypal"] == "sandbox configured":
+            expect(pay_button).to_be_enabled()
+        else:
+            expect(pay_button).to_be_disabled()
         shop.screenshot(path=args.output / "shop-mobile.png", full_page=True)
         assert shop.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
 
