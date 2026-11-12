@@ -22,3 +22,5 @@ Keep merchant credentials separate from buyer invitations and public testing ins
 5. Register `https://<service-host>/api/paypal/webhooks` in the PayPal sandbox app and add the resulting `PAYPAL_WEBHOOK_ID` in Render. Run the provider checks above on the hosted site using sandbox accounts. [PayPal webhooks](https://developer.paypal.com/api/rest/webhooks/rest/)
 
 The app uses one web process for short-lived practice sessions and camera challenges. Practice invitations and review access expire after one hour. Starting another practice case clears expired practice records. Use the HTTPS `/practice` URL in judge instructions and keep the merchant credential in the dashboard.
+
+For a temporary preview, choose `render.preview.yaml` as the Blueprint path. It uses a free web service and a free PostgreSQL database. The web service can spin down when idle, and the database expires 30 days after creation. Upgrade the database before it expires if the demo needs to stay available longer. [Render free-tier limits](https://render.com/docs/free)

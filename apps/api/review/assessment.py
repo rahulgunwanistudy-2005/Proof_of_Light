@@ -60,6 +60,13 @@ def analyze(image: bytes, statement: str) -> dict:
                 },
             },
         )
+        if result.status_code == 402:
+            raise HTTPException(
+                503,
+                "Gemini billing or quota is unavailable. Check the project in Google AI Studio.",
+            )
+        if result.status_code == 429:
+            raise HTTPException(503, "Gemini has reached its request limit. Try again later.")
         result.raise_for_status()
         data = result.json()["candidates"][0]["content"]["parts"]
         message = "".join(part.get("text", "") for part in data if not part.get("thought"))
