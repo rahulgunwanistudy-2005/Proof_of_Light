@@ -10,6 +10,7 @@ from test_review import review  # noqa: F401 - pytest fixture
 
 from apps.api.main import STARTS, app
 from apps.api.paypal.config import sandbox
+from apps.api.review import assessment
 from apps.api.review.models import Audit, Case, Evidence
 from apps.api.review.practice_access import issue_practice
 
@@ -26,8 +27,33 @@ def start(client):
     return data, {"X-Practice-Token": data["token"]}
 
 
-def test_public_practice_uses_real_review_without_provider_access(review):  # noqa: F811
+def fake_notes(image, statement):
+    return {
+        "visible_condition": "A chip is visible on the rim.",
+        "uncertainty": "Only one angle is shown.",
+        "follow_up": "Photograph the rim from above.",
+        "model": "gemini-test",
+    }
+
+
+def practice_case_with_photo(client):
+    session, practice = start(client)
+    claim = {"X-Claim-Token": session["claim_path"].split("#")[1]}
+    picture = io.BytesIO()
+    Image.new("RGB", (32, 32), "tan").save(picture, "PNG")
+    evidence = {
+        "statement": "The sample mug has a chipped rim.",
+        "photo": base64.b64encode(picture.getvalue()).decode(),
+        "ai_consent": True,
+    }
+    assert client.post("/api/claim/evidence", json=evidence, headers=claim).status_code == 201
+    return f"/api/review/cases/{session['case_id']}", practice
+
+
+def test_public_practice_uses_real_review_without_provider_access(review, monkeypatch):  # noqa: F811
     client, _ = review
+    monkeypatch.setattr(assessment, "analyze", fake_notes)
+    monkeypatch.setattr(assessment, "PRACTICE_CALLS", [])
     app.dependency_overrides[sandbox] = object
     client.headers.pop("Authorization")
     session, practice = start(client)
@@ -46,9 +72,11 @@ def test_public_practice_uses_real_review_without_provider_access(review):  # no
     assert client.post("/api/claim/evidence", json=evidence, headers=claim).status_code == 409
     record = client.get(f"{case_path}/evidence", headers=practice).json()
     assert record["statement"] == evidence["statement"] and record["has_image"]
-    assert record["ai_consent"] is False
+    assert record["ai_consent"] is True
     assert client.get(f"{case_path}/packet.pdf", headers=practice).content.startswith(b"%PDF-")
-    assert client.post(f"{case_path}/assessment", headers=practice).status_code == 401
+    notes = client.post(f"{case_path}/assessment", headers=practice)
+    assert notes.status_code == 200, notes.text
+    assert notes.json()["model"] == "gemini-test"
     assert client.get("/api/review/disputes", headers=practice).status_code == 401
     assert client.get("/api/review/shop-orders", headers=practice).status_code == 401
     assert client.post(f"{case_path}/invitations", headers=practice).status_code == 401
@@ -123,3 +151,24 @@ def test_practice_sessions_are_isolated_and_expired_cases_are_removed(review):  
     with Session(engine) as db:
         assert not db.scalars(select(Audit).where(Audit.case_id == first["case_id"])).all()
         assert not db.scalars(select(Evidence).where(Evidence.case_id == first["case_id"])).all()
+
+
+def test_practice_ai_notes_share_an_hourly_budget(review, monkeypatch):  # noqa: F811
+    client, _ = review
+    client.headers.pop("Authorization")
+    calls = []
+    monkeypatch.setattr(
+        assessment, "analyze", lambda *args: calls.append(args) or fake_notes(*args)
+    )
+    monkeypatch.setattr(assessment, "PRACTICE_CALLS", [])
+    monkeypatch.setenv("POL_PRACTICE_AI_PER_HOUR", "1")
+    first, first_token = practice_case_with_photo(client)
+    second, second_token = practice_case_with_photo(client)
+    assert client.post(f"{first}/assessment", headers=first_token).status_code == 200
+    # Stored notes are returned again without spending budget.
+    assert client.post(f"{first}/assessment", headers=first_token).status_code == 200
+    limited = client.post(f"{second}/assessment", headers=second_token)
+    assert limited.status_code == 429 and "limit" in limited.json()["detail"]
+    assert len(calls) == 1
+    # A practice token cannot request notes for another practice case.
+    assert client.post(f"{second}/assessment", headers=first_token).status_code == 404

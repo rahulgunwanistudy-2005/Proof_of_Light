@@ -30,7 +30,7 @@ if (location.pathname === "/claim") {
     const state = await api("/api/claim", { claimToken });
     if (state.practice) {
       document.getElementById("claim-description").textContent = "Use a sample statement and an item you own. The practice case expires one hour after it starts.";
-      document.getElementById("ai-consent").hidden = true;
+      document.getElementById("ai-consent").lastChild.textContent = " Allow Gemini to write AI notes on this practice photo and statement.";
     }
     form.hidden = state.submitted;
     say(state.submitted ? "The merchant already received your evidence." : "Add a statement and optionally attach one image or a guided capture.");

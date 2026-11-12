@@ -99,7 +99,7 @@ with sync_playwright() as playwright:
             judge.get_by_role("link", name="Open buyer form").click()
         sample = buyer_popup.value
         sample.get_by_label("What happened?").fill("The practice mug has a chipped rim.")
-        expect(sample.get_by_label("Allow the merchant to send my photo")).to_be_hidden()
+        expect(sample.get_by_label("Allow Gemini to write AI notes")).to_be_visible()
         sample.get_by_label("Share this evidence with the merchant").check()
         sample.get_by_role("button", name="Send evidence").click()
         expect(sample.get_by_text("Practice evidence saved.", exact=False)).to_be_visible()

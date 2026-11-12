@@ -11,8 +11,8 @@ The practice flow runs without login or provider keys. PayPal checkout and refun
 ## Try it in two minutes
 
 1. Open [Try a practice case](https://proof-of-light-hjpt.onrender.com/practice) and select **Start practice case**. No login or keys are needed.
-2. Select **Open buyer form**, write a short statement, tick the sharing consent and send the evidence. A guided light capture is optional and needs a camera.
-3. Back on the practice tab, refresh the case, download the evidence PDF, prepare a refund and approve the exact amount. Practice approvals are saved locally and never call PayPal.
+2. Select **Open buyer form**, write a short statement, attach a photo, tick **Allow Gemini to write AI notes** and the sharing consent, and send the evidence. A guided light capture is optional and needs a camera.
+3. Back on the practice tab, refresh the case and select **Generate Gemini notes** to see structured observations, uncertainty and a suggested follow-up photo. Then download the evidence PDF, prepare a refund and approve the exact amount. Practice approvals are saved locally and never call PayPal. Practice AI notes share an hourly limit (30 calls by default).
 4. The [sandbox shop](https://proof-of-light-hjpt.onrender.com/shop) opens PayPal's real sandbox approval page for a test purchase.
 
 | Landing | How it works | Light show |

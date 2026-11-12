@@ -3,6 +3,8 @@
 import base64
 import os
 import re
+import threading
+import time
 
 import requests
 from fastapi import HTTPException
@@ -10,8 +12,40 @@ from pydantic import Field, ValidationError
 
 from . import service
 from .claims import latest_evidence, router
-from .router import DB, Merchant
+from .practice_access import PREFIX
+from .router import DB, Reviewer
 from .schemas import CaseSnapshot, StrictModel
+
+# Practice cases are public, so their Gemini calls share an hourly budget.
+# Each case stores at most one set of notes; IN_FLIGHT stops double clicks
+# from paying for the same notes twice.
+PRACTICE_CALLS: list[float] = []
+IN_FLIGHT: set[str] = set()
+BUDGET_LOCK = threading.Lock()
+
+
+def practice_budget() -> int:
+    try:
+        return max(0, int(os.environ.get("POL_PRACTICE_AI_PER_HOUR", "30")))
+    except ValueError:
+        return 30
+
+
+def reserve(case_id: str, practice: bool):
+    with BUDGET_LOCK:
+        if case_id in IN_FLIGHT:
+            raise HTTPException(409, "AI notes are already being prepared for this case.")
+        if practice:
+            now = time.time()
+            PRACTICE_CALLS[:] = [stamp for stamp in PRACTICE_CALLS if now - stamp < 3600]
+            if len(PRACTICE_CALLS) >= practice_budget():
+                raise HTTPException(
+                    429,
+                    "Practice AI notes have reached this hour's limit. Try again later.",
+                    headers={"Retry-After": "600"},
+                )
+            PRACTICE_CALLS.append(now)
+        IN_FLIGHT.add(case_id)
 
 
 class Assessment(StrictModel):
@@ -86,7 +120,7 @@ def analyze(image: bytes, statement: str) -> dict:
 
 
 @router.post("/api/review/cases/{case_id}/assessment")
-def assess(case_id: str, db: DB, actor: Merchant):
+def assess(case_id: str, db: DB, actor: Reviewer):
     with db.begin():
         case = service.case_for_merchant(db, case_id, actor)
         record = latest_evidence(db, case.id)
@@ -100,7 +134,13 @@ def assess(case_id: str, db: DB, actor: Merchant):
             record.id,
             case.version,
         )
-    assessment = analyze(image, statement)
+        practice = case.merchant_id.startswith(PREFIX)
+    reserve(case_id, practice)
+    try:
+        assessment = analyze(image, statement)
+    finally:
+        with BUDGET_LOCK:
+            IN_FLIGHT.discard(case_id)
     with db.begin():
         case = service.case_for_merchant(db, case_id, actor)
         record = latest_evidence(db, case.id)

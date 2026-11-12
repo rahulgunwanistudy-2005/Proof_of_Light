@@ -141,7 +141,7 @@ def submit(body: Submission, request: Request, db: DB, token: ClaimToken):
             image_jpeg=image,
             light_report=light,
             assessment={},
-            ai_consent=body.ai_consent and bool(image) and not practice,
+            ai_consent=body.ai_consent and bool(image),
         )
         db.add(record)
         db.flush()
