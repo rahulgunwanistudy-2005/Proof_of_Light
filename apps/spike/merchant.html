@@ -6,6 +6,9 @@
   <title>Merchant review · Proof of Light</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/workspace.css">
+  <link rel="stylesheet" href="/static/fx.css">
+  <link rel="preload" href="/static/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <script type="module" src="/static/fx.js"></script>
   <script type="module" src="/static/merchant.js"></script>
 </head>
 <body>
@@ -13,14 +16,18 @@
 <header class="site-header">
   <a class="wordmark" href="/"><span class="aperture" aria-hidden="true"></span>Proof of Light</a>
   <nav class="workspace-nav" aria-label="Main navigation">
-    <div class="nav-pill"><a href="/#capture">Capture lab</a><a href="/shop">Sandbox shop</a></div>
+    <div class="nav-pill"><a href="/#capture">Capture lab</a><a href="/#method">How it works</a><a href="/shop">Sandbox shop</a></div>
   </nav>
-  <a id="review-link" class="header-action" href="/merchant" aria-current="page">Merchant review <span aria-hidden="true">↗</span></a>
+  <div class="header-end">
+    <span class="status-chip" id="sandbox-chip" data-state="checking"><i aria-hidden="true"></i><span>Checking sandbox</span></span>
+    <a id="review-link" class="header-action" href="/merchant" aria-current="page">Merchant review <span aria-hidden="true">↗</span></a>
+  </div>
 </header>
 <main class="workspace" id="main">
-  <div class="workspace-intro">
+  <div class="workspace-intro" data-stage-root>
     <h1 id="workspace-title">Merchant review</h1>
     <p class="lede" id="workspace-description">Invite a buyer, review their evidence, and authorize the exact financial action.</p>
+    <div class="intro-art" data-stage aria-hidden="true"><canvas class="light-stack" data-scene="stack"></canvas></div>
   </div>
   <p id="notice" class="notice" role="status" aria-live="polite"></p>
   <form id="login" class="sheet stack" hidden>
@@ -65,5 +72,10 @@
     </div>
   </div>
 </main>
+<footer class="site-footer">
+  <p class="footer-mark">Proof of <em>Light</em></p>
+  <nav aria-label="Footer"><a href="/#capture">Capture lab</a><a href="/practice">Practice case</a><a href="/shop">Sandbox shop</a><a href="/merchant">Merchant review</a></nav>
+  <p class="footer-note">PayPal sandbox only · No real money moves · MIT licensed</p>
+</footer>
 </body>
 </html>

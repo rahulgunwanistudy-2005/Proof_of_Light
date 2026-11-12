@@ -38,7 +38,9 @@ try {
   const checkout = query.get("checkout");
   if (checkout && /^[a-f0-9]{32}$/.test(checkout)) renderReturn(checkout);
   for (const [index, item] of catalog.products.entries()) {
-    const card = node("article", undefined, "sheet");
+    const card = node("article", undefined, "sheet product-card");
+    card.dataset.tilt = "";
+    card.append(node("span", `/ 0${index + 1}`, "step-index"));
     const swatch = node("div", undefined, `product-swatch ${["mug", "bowl", "plate"][index]}`);
     swatch.setAttribute("aria-hidden", "true");
     const pay = node("button", "Continue to PayPal", "primary");
