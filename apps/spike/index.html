@@ -8,6 +8,9 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/workspace.css">
+  <link rel="stylesheet" href="/static/fx.css">
+  <link rel="preload" href="/static/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <script type="module" src="/static/fx.js"></script>
   <script type="module" src="/static/claim.js"></script>
   <script type="module" src="/static/capture.js"></script>
 </head>
@@ -16,25 +19,55 @@
   <header class="site-header">
     <a class="wordmark" href="/"><span class="aperture" aria-hidden="true"></span>Proof of Light</a>
     <nav class="workspace-nav" aria-label="Main navigation">
-      <div class="nav-pill"><a href="/#capture">Capture lab</a><a href="/shop">Sandbox shop</a></div>
+      <div class="nav-pill"><a href="/#capture">Capture lab</a><a href="/#method">How it works</a><a href="/shop">Sandbox shop</a></div>
     </nav>
-    <a class="header-action" href="/merchant">Merchant review <span aria-hidden="true">↗</span></a>
+    <div class="header-end">
+      <span class="status-chip" id="sandbox-chip" data-state="checking"><i aria-hidden="true"></i><span>Checking sandbox</span></span>
+      <a class="header-action" href="/merchant">Merchant review <span aria-hidden="true">↗</span></a>
+    </div>
   </header>
   <main id="main">
-    <section class="hero" id="capture-hero" aria-labelledby="hero-title">
+    <section class="hero" id="capture-hero" aria-labelledby="hero-title" data-stage-root>
       <div class="hero-copy">
-        <p class="eyebrow"><span aria-hidden="true"></span> Guided item capture</p>
-        <h1 id="hero-title">Put the evidence in a <em>better light.</em></h1>
-        <p>Record an item’s response to changing light and keep the evidence together for merchant review.</p>
+        <p class="eyebrow"><span aria-hidden="true"></span> Guided item capture · PayPal sandbox</p>
+        <h1 id="hero-title"><span class="line">Put the evidence</span> <span class="line"><span class="iso-stack" aria-hidden="true"><i></i><i></i><i></i></span> in a better</span> <span class="line"><em>light.</em></span></h1>
         <div class="hero-actions">
-          <a class="hero-action" href="#capture">Open capture lab <span aria-hidden="true">↘</span></a>
+          <a class="hero-action" href="#capture"><span aria-hidden="true">↘</span> Open capture lab</a>
           <a class="hero-practice" href="/practice">Try a practice case <span aria-hidden="true">↗</span></a>
         </div>
+        <p class="hero-lede">Record an item’s response to a one-time light sequence, keep the statement and photo together, and let the merchant approve the exact PayPal refund.</p>
       </div>
-      <div class="hero-art" aria-hidden="true">
-        <img src="/static/light-optics.webp" width="1250" height="1111" alt="" fetchpriority="high">
+      <div class="hero-art" data-stage>
+        <canvas id="hero-scene" class="light-stack" data-scene="hero" aria-hidden="true"></canvas>
+        <img src="/static/light-optics.webp" width="1250" height="1111" alt="" aria-hidden="true" fetchpriority="high">
+        <ul class="hero-tags" aria-label="What the capture keeps">
+          <li style="--x:8%;--y:16%">Statement</li>
+          <li style="--x:70%;--y:9%">Light response</li>
+          <li style="--x:76%;--y:78%">Merchant approval</li>
+        </ul>
       </div>
-      <div class="hero-notch"><a href="#method">How it works <span aria-hidden="true">↘</span></a></div>
+      <div class="hero-notch">
+        <div class="light-toggle" data-light-show="hero-scene" role="group" aria-label="Light show" hidden>
+          <span>Light show</span>
+          <button type="button" data-value="on" aria-pressed="false">On</button>
+          <button type="button" data-value="off" aria-pressed="true">Off</button>
+        </div>
+      </div>
+    </section>
+    <section class="rails" aria-labelledby="rails-title" data-reveal>
+      <h2 id="rails-title">Runs on real sandbox rails</h2>
+      <div class="marquee">
+        <ul class="marquee-track" data-marquee>
+          <li><b>PayPal</b> Orders v2</li>
+          <li><b>PayPal</b> Payments v2 refunds</li>
+          <li><b>PayPal</b> Disputes v1</li>
+          <li><b>PayPal</b> Webhooks</li>
+          <li><b>Gemini</b> structured notes</li>
+          <li><b>Render</b> web + Postgres</li>
+          <li><b>WebGL2</b> light field</li>
+          <li><b>FastAPI</b> verifier</li>
+        </ul>
+      </div>
     </section>
     <div class="claim-intro" id="claim-intro" hidden>
       <h1>Send item evidence</h1>
@@ -52,7 +85,7 @@
       </form>
     </section>
     <section class="capture-lab" id="capture" aria-labelledby="lab-title">
-      <div class="section-intro">
+      <div class="section-intro" data-reveal>
         <h2 id="lab-title">Capture lab</h2>
         <p>Frame the item, record a short light sequence, and inspect the reflected colors.</p>
       </div>
@@ -82,15 +115,40 @@
       <section id="result" class="result" hidden aria-labelledby="result-title"><div class="result-heading"><div><p class="result-kicker">Experimental light response</p><h3 id="result-title"></h3><p id="result-reason"></p></div><a id="download" class="secondary" download>Download capture (.npz)</a></div><dl id="metrics" class="metrics"></dl><div class="plots"><div><h4>Received chromaticity</h4><p id="trace-empty" hidden>No responsive surface was found. There is no usable reflection trace to display.</p><svg id="trace" viewBox="0 0 600 130" role="img" aria-label="Red and green chromaticity over the capture"></svg></div><div><h4>Responsive surface</h4><canvas id="heatmap" width="80" height="60" aria-label="Calibration response strength heatmap"></canvas><p>Brighter pixels respond more strongly.</p></div></div><p class="limit"><strong>A light match is not proof of an authentic item.</strong> Paper can reflect the same sequence. These provisional thresholds need physical testing. No order binding, damage assessment or PayPal action runs in this build.</p></section>
     </section>
     <section class="method" id="method" aria-labelledby="method-title">
-      <div class="section-intro"><h2 id="method-title">How it works</h2></div>
-      <div class="notes">
-        <div><h3>Measure the light response</h3><p>The server issues a one-time sequence when you start. The camera records reflected colors. The verifier aligns the calibration, finds responsive pixels and compares the ten challenge slots.</p></div>
-        <div><h3>Review the evidence</h3><p>Download the capture to keep the raw sampled frames and timing log. A merchant reviews the full case before approving a financial action.</p></div>
+      <div class="section-intro" data-reveal>
+        <h2 id="method-title">How it works</h2>
+        <p>Light, evidence and approval stay in one case file. Code checks the light; a person decides the money.</p>
       </div>
-      <p class="finding"><strong>Capture limits.</strong> Fabricated uploads passed this experiment without a camera. A color match cannot establish an item’s authenticity.</p>
+      <ol class="steps">
+        <li class="step step-lead" data-tilt data-reveal>
+          <span class="step-index">/ 01</span>
+          <span class="iso-stack lg spin" aria-hidden="true"><i></i><i></i><i class="glyph-lens"></i></span>
+          <h3>Measure the light response</h3>
+          <p>The server issues a one-time sequence when you start. The camera records reflected colors. The verifier aligns the calibration, finds responsive pixels and compares the ten challenge slots.</p>
+          <a href="#capture">Open capture lab <span aria-hidden="true">↘</span></a>
+        </li>
+        <li class="step" data-tilt data-reveal>
+          <span class="step-index">/ 02</span>
+          <span class="iso-stack lg spin" aria-hidden="true"><i></i><i></i><i class="glyph-lines"></i></span>
+          <h3>Review the evidence</h3>
+          <p>Statement, photo, light diagnostics and optional Gemini notes land in one case. Download the capture or the evidence PDF at any point.</p>
+        </li>
+        <li class="step" data-tilt data-reveal>
+          <span class="step-index">/ 03</span>
+          <span class="iso-stack lg spin" aria-hidden="true"><i></i><i></i><i class="glyph-check"></i></span>
+          <h3>Approve the exact refund</h3>
+          <p>A merchant checks the amount and destination before a PayPal sandbox refund is sent. The light result never moves money on its own.</p>
+          <a href="/merchant">Merchant review <span aria-hidden="true">↗</span></a>
+        </li>
+      </ol>
+      <p class="finding" data-reveal><strong>Capture limits.</strong> Fabricated uploads passed this experiment without a camera. A color match cannot establish an item’s authenticity.</p>
     </section>
   </main>
-  <footer><span>Proof of Light</span><span>Guided capture · Research build</span></footer>
+  <footer class="site-footer">
+    <p class="footer-mark">Proof of <em>Light</em></p>
+    <nav aria-label="Footer"><a href="/#capture">Capture lab</a><a href="/practice">Practice case</a><a href="/shop">Sandbox shop</a><a href="/merchant">Merchant review</a></nav>
+    <p class="footer-note">PayPal sandbox only · No real money moves · MIT licensed</p>
+  </footer>
   <div id="light-field" hidden role="dialog" aria-modal="true" aria-label="Light capture in progress"><div class="capture-inset" id="inset"><span id="live-step">Preparing</span></div><button id="abort">Stop capture</button></div>
 </body>
 </html>
