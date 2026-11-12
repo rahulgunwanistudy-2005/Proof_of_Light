@@ -9,10 +9,11 @@ import hashlib
 import json
 import time
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from .models import Approval, Audit, Case, Outbox, Proposal
+from .practice_access import PREFIX
 from .schemas import Action, Approve, CaseSnapshot, FinancialAction, Propose
 
 
@@ -115,6 +116,12 @@ def validate_action(case: Case, action: FinancialAction):
 
 def propose(db: Session, case_id: str, merchant_id: str, body: Propose) -> Proposal:
     case = case_for_merchant(db, case_id, merchant_id)
+    if merchant_id.startswith(PREFIX):
+        count = db.scalar(
+            select(func.count()).select_from(Proposal).where(Proposal.case_id == case_id)
+        )
+        if count >= 8:
+            raise ReviewError("Start a new practice case to try more proposals.", 429)
     validate_action(case, body.financial_action)
     # A light-response enum is deliberately never consulted to authorize money
     # or denial. Every proposal, at every amount and severity, requires review.
@@ -243,6 +250,8 @@ def ready_action(db: Session, outbox_id: str) -> dict:
     case = db.scalar(select(Case).where(Case.id == proposal.case_id).with_for_update())
     if case is None:
         raise ReviewError("The source case is missing.")
+    if case.snapshot["paypal_order_id"].startswith("PRACTICE-"):
+        raise ReviewError("Practice approvals stay in Proof of Light.", 422)
     db.refresh(proposal)
     db.refresh(outbox)
     if (

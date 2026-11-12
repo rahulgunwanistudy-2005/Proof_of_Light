@@ -1,4 +1,4 @@
-"""Local capture-assistance API with merchant review; no financial executor.
+"""Capture-assistance API with merchant-authorized sandbox actions.
 
 FastAPI/Pydantic reference: https://fastapi.tiangolo.com/tutorial/body/
 """
@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, UnidentifiedImageError
 from pol_verifier.challenge import authentic, issue
@@ -28,7 +28,7 @@ from apps.api.paypal import disputes, refunds  # noqa: F401 - register refund ro
 from apps.api.paypal.checkout import PayPalFailure
 from apps.api.paypal.config import configured, public_origin
 from apps.api.paypal.shop import provider_error
-from apps.api.review import assessment, packet  # noqa: F401 - register evidence routes
+from apps.api.review import assessment, packet, practice  # noqa: F401 - register evidence routes
 from apps.api.review.claims import claim_owner, jpeg
 from apps.api.review.claims import router as claim_router
 from apps.api.review.router import router as review_router
@@ -40,6 +40,7 @@ app = FastAPI(title="Proof of Light capture assistance", version="0.1.0")
 app.include_router(review_router)
 app.include_router(claim_router)
 app.include_router(disputes.router)
+app.include_router(practice.router)
 allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
 if render_host := os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
     allowed_hosts.append(render_host)
@@ -50,20 +51,16 @@ CHALLENGES: dict[str, dict] = {}
 CAPTURES: dict[str, tuple[float, bytes, dict, str | None, bytes | None]] = {}
 ISSUANCE: dict[str, list[float]] = {}
 MAX_UPLOAD = 16 * 1024 * 1024
-CHECKOUT_STARTS: dict[str, list[float]] = {}
+STARTS: dict[str, dict[str, list[float]]] = {"/api/shop/orders": {}, "/api/practice": {}}
 
 
 @app.exception_handler(ReviewError)
 async def review_error(request: Request, error: ReviewError):
-    from fastapi.responses import JSONResponse
-
     return JSONResponse(status_code=error.status, content={"detail": str(error)})
 
 
 @app.exception_handler(PayPalFailure)
 async def paypal_error(request: Request, error: PayPalFailure):
-    from fastapi.responses import JSONResponse
-
     translated = provider_error(error)
     return JSONResponse({"detail": translated.detail}, status_code=translated.status_code)
 
@@ -74,17 +71,22 @@ async def local_limits(request: Request, call_next):
         origin = request.headers.get("origin")
         if origin and origin != public_origin(request):
             return Response("Use the capture page on this server.", status_code=403)
-        if request.method == "POST" and request.url.path == "/api/shop/orders":
+        if request.method == "POST" and request.url.path in STARTS:
             with LOCK:
                 now = time.time()
-                for key, times in list(CHECKOUT_STARTS.items()):
-                    CHECKOUT_STARTS[key] = [stamp for stamp in times if now - stamp < 60]
-                    if not CHECKOUT_STARTS[key]:
-                        del CHECKOUT_STARTS[key]
+                starts = STARTS[request.url.path]
+                for key, times in list(starts.items()):
+                    starts[key] = [stamp for stamp in times if now - stamp < 60]
+                    if not starts[key]:
+                        del starts[key]
                 host = request.client.host if request.client else "unknown"
-                if len(CHECKOUT_STARTS) >= 100 or len(CHECKOUT_STARTS.get(host, [])) >= 10:
-                    return Response("Too many checkouts. Try again in a minute.", status_code=429)
-                CHECKOUT_STARTS.setdefault(host, []).append(now)
+                if len(starts) >= 100 or len(starts.get(host, [])) >= 10:
+                    return JSONResponse(
+                        {"detail": "Too many requests. Try again in a minute."},
+                        status_code=429,
+                        headers={"Retry-After": "60"},
+                    )
+                starts.setdefault(host, []).append(now)
         # Count streamed bytes rather than trusting a supplied Content-Length.
         body = bytearray()
         async for chunk in request.stream():
@@ -270,6 +272,7 @@ def index():
 
 @app.get("/merchant")
 @app.get("/console")
+@app.get("/practice")
 def merchant_page():
     return FileResponse(ROOT / "apps/spike/merchant.html")
 

@@ -24,11 +24,14 @@ function fileData(file) {
 if (location.pathname === "/claim") {
   panel.hidden = false;
   document.title = "Send item evidence · Proof of Light";
-  document.querySelector(".intro h1").textContent = "Send item evidence";
-  document.querySelector(".intro p").textContent = "Describe what happened and choose how to show the item.";
-  document.querySelector(".finding").hidden = true;
+  document.getElementById("capture-hero").hidden = true;
+  document.getElementById("claim-intro").hidden = false;
   try {
     const state = await api("/api/claim", { claimToken });
+    if (state.practice) {
+      document.getElementById("claim-description").textContent = "Use a sample statement and an item you own. The practice case expires one hour after it starts.";
+      document.getElementById("ai-consent").hidden = true;
+    }
     form.hidden = state.submitted;
     say(state.submitted ? "The merchant already received your evidence." : "Add a statement and optionally attach one image or a guided capture.");
   } catch (error) {
@@ -42,7 +45,7 @@ if (location.pathname === "/claim") {
     panel.scrollIntoView({ block: "start" });
   });
   document.getElementById("claim-guide").addEventListener("click", () => {
-    document.getElementById("camera-shell").scrollIntoView({ block: "start" });
+    document.getElementById("capture").scrollIntoView({ block: "start" });
   });
   photo.addEventListener("change", () => {
     capture = null;

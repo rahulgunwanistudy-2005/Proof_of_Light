@@ -208,7 +208,7 @@ function displayResult(result, challenge) {
   }
   const ns = "http://www.w3.org/2000/svg"; $("trace").replaceChildren();
   $("trace-empty").hidden = report.trace.length > 0;
-  $("trace").hidden = report.trace.length === 0;
+  $("trace").toggleAttribute("hidden", report.trace.length === 0);
   if (report.trace.length) {
     const first = report.trace[0].t_ms, duration = report.trace.at(-1).t_ms - first || 1;
     const values = report.trace.flatMap((p) => [p.r, p.g]);

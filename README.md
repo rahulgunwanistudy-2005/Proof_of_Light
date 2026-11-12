@@ -2,7 +2,7 @@
 
 Proof of Light helps buyers submit item evidence and gives merchants a case file to review before a refund. A buyer can record a guided light response, upload a photo, or send a statement. The merchant reviews the exact amount and destination before sending a PayPal sandbox refund.
 
-The local practice flow runs without provider keys. Browser checks covered invitation, camera simulation, evidence submission, PDF download and merchant approval on SQLite and PostgreSQL. PayPal checkout and refund tests use stubbed responses. Live PayPal, Gemini and hosted deployment need configuration. The [product brief](docs/PRODUCT_BRIEF.md) describes the capture-assistance scope.
+The practice flow runs without login or provider keys. PayPal checkout and refund tests use stubbed responses. Live PayPal, Gemini and hosted deployment need configuration. The [product brief](docs/PRODUCT_BRIEF.md) describes the capture-assistance scope.
 
 ## Run locally
 
@@ -15,6 +15,8 @@ python3.12 -m venv .venv
 .venv/bin/alembic upgrade head
 .venv/bin/python -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
 ```
+
+Open [Try a practice case](http://127.0.0.1:8000/practice) to send sample evidence, download the PDF, and approve a fictional refund. Each practice case has its own one-hour session. For the authenticated merchant workflow, use the steps below.
 
 1. Open [Merchant review](http://127.0.0.1:8000/merchant). Enter `POL_MERCHANT_TOKEN` from the ignored `.env` file.
 2. Select **Create practice case**, then **Create buyer link**. Open the invitation in a separate tab.

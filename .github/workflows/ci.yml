@@ -17,3 +17,15 @@ jobs:
       - run: ruff format --check apps/api packages scripts tests
       - run: pytest -q
       - run: for file in apps/spike/*.js; do node --check "$file" || exit 1; done
+      - run: python -m playwright install --with-deps chromium
+      - name: Verify buyer and merchant flows in Chromium
+        env:
+          DATABASE_URL: sqlite:////tmp/proof-of-light-ci.db
+          POL_MERCHANT_TOKEN: proof-of-light-browser-fixture-00000000000000
+        run: |
+          alembic upgrade head
+          uvicorn apps.api.main:app --host 127.0.0.1 --port 8011 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          curl --retry 20 --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8011/health
+          python scripts/review_browser_smoke.py --output /tmp/proof-of-light-browser

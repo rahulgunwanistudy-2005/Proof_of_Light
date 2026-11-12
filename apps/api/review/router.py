@@ -2,7 +2,7 @@ import hmac
 import os
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import Field
 from sqlalchemy import select
@@ -11,16 +11,20 @@ from sqlalchemy.orm import Session
 from . import service
 from .database import session
 from .models import Audit, Case, Outbox, Proposal
+from .practice_access import PREFIX, authenticate_practice
 from .schemas import Approve, CaseSnapshot, Propose, Reject, StrictModel
 
 router = APIRouter(prefix="/api/review", tags=["merchant review"])
 bearer = HTTPBearer(auto_error=False)
 
 
-def merchant(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]) -> str:
+Credentials = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer)]
+
+
+def merchant(credentials: Credentials) -> str:
     token = os.environ.get("POL_MERCHANT_TOKEN", "")
     actor = os.environ.get("POL_MERCHANT_ID", "")
-    if len(token) < 32 or not actor:
+    if len(token) < 32 or not actor or actor.startswith(PREFIX):
         raise HTTPException(503, "Merchant review is not configured on this server.")
     if (
         not credentials
@@ -35,8 +39,18 @@ def merchant(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends
     return actor
 
 
+def reviewer(
+    credentials: Credentials,
+    x_practice_token: Annotated[str | None, Header(max_length=128)] = None,
+) -> str:
+    if x_practice_token is not None:
+        return authenticate_practice(x_practice_token)
+    return merchant(credentials)
+
+
 DB = Annotated[Session, Depends(session)]
 Merchant = Annotated[str, Depends(merchant)]
+Reviewer = Annotated[str, Depends(reviewer)]
 
 
 def case_json(case):
@@ -64,7 +78,7 @@ def proposal_json(proposal):
 
 
 @router.get("/cases")
-def cases(db: DB, actor: Merchant):
+def cases(db: DB, actor: Reviewer):
     return [case_json(case) for case in db.scalars(select(Case).where(Case.merchant_id == actor))]
 
 
@@ -88,7 +102,7 @@ def revise(case_id: str, body: Revision, db: DB, actor: Merchant):
 
 
 @router.get("/cases/{case_id}")
-def detail(case_id: str, db: DB, actor: Merchant):
+def detail(case_id: str, db: DB, actor: Reviewer):
     case = service.case_for_merchant(db, case_id, actor)
     proposals = db.scalars(select(Proposal).where(Proposal.case_id == case.id)).all()
     actions = db.scalars(
@@ -122,13 +136,13 @@ def detail(case_id: str, db: DB, actor: Merchant):
 
 
 @router.post("/cases/{case_id}/proposals", status_code=201)
-def propose(case_id: str, body: Propose, db: DB, actor: Merchant):
+def propose(case_id: str, body: Propose, db: DB, actor: Reviewer):
     with db.begin():
         return proposal_json(service.propose(db, case_id, actor, body))
 
 
 @router.post("/proposals/{proposal_id}/approve")
-def approve(proposal_id: str, body: Approve, db: DB, actor: Merchant):
+def approve(proposal_id: str, body: Approve, db: DB, actor: Reviewer):
     with db.begin():
         action = service.approve(db, proposal_id, actor, body)
         return {
@@ -136,12 +150,16 @@ def approve(proposal_id: str, body: Approve, db: DB, actor: Merchant):
             "status": action.status,
             "request_id": action.request_id,
             "paypal_executed": False,
-            "message": "Approval saved. Review the action before sending it to PayPal.",
+            "message": (
+                "Practice approval saved."
+                if actor.startswith(PREFIX)
+                else "Approval saved. Review the action before sending it to PayPal."
+            ),
         }
 
 
 @router.post("/proposals/{proposal_id}/reject")
-def reject(proposal_id: str, body: Reject, db: DB, actor: Merchant):
+def reject(proposal_id: str, body: Reject, db: DB, actor: Reviewer):
     with db.begin():
         service.reject(db, proposal_id, actor, body.reason)
     return {"status": "REJECTED", "paypal_executed": False}

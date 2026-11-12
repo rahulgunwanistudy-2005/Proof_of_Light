@@ -1,5 +1,13 @@
 # Progress
 
+## 12 Nov 2026 — Redesigned frontend and judge practice flow
+
+The redesigned frontend includes a no-login practice case at `/practice`. A judge can submit sample evidence, review the case, download the PDF, and explicitly approve a fictional refund. Practice access is limited to one case and expires after one hour. Provider routes keep the separate merchant credential requirement.
+
+All 65 tests passed. The updated Chromium smoke script passed on disposable SQLite and UTF-8 PostgreSQL databases, covering the authenticated flow with a simulated camera and the no-login flow with sample evidence. GitHub CI now runs the browser script. The Render Blueprint can start the practice flow before provider keys are added.
+
+The [release guide](DEPLOY.md) covers GitHub publication, Render setup, sandbox credentials, webhook registration, and live verification.
+
 ## 12 Nov 2026 — Local buyer and merchant workflow
 
 The buyer invitation, optional photo or guided capture, merchant case review, approval and evidence PDF work in the running application. Browser verification used Chromium's simulated camera on disposable SQLite and PostgreSQL databases. Render's published Blueprint schema accepted `render.yaml`. The SDK request and checkout-to-refund tests use stubbed responses. The updated suite passes 63 tests. Browser evidence is in `eval/reports/2026-11-12-review-browser.json` and the practice screenshots are in `design/screenshots/`.

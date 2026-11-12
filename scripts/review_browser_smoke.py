@@ -82,6 +82,36 @@ with sync_playwright() as playwright:
         expect(shop.get_by_role("button", name="Continue to PayPal").first).to_be_disabled()
         shop.screenshot(path=args.output / "shop-mobile.png", full_page=True)
         assert shop.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+
+        judges = browser.new_context(viewport={"width": 390, "height": 844}, accept_downloads=True)
+        judge = judges.new_page()
+        judge.on("pageerror", lambda error: errors.append(str(error)))
+        judge.goto(args.base)
+        judge.get_by_role("link", name="Try a practice case").click()
+        judge.get_by_role("button", name="Start practice case").click()
+        expect(judge.get_by_label("Merchant access token")).to_be_hidden()
+        with judge.expect_popup() as buyer_popup:
+            judge.get_by_role("link", name="Open buyer form").click()
+        sample = buyer_popup.value
+        sample.get_by_label("What happened?").fill("The practice mug has a chipped rim.")
+        expect(sample.get_by_label("Allow the merchant to send my photo")).to_be_hidden()
+        sample.get_by_label("Share this evidence with the merchant").check()
+        sample.get_by_role("button", name="Send evidence").click()
+        expect(sample.get_by_text("Practice evidence saved.", exact=False)).to_be_visible()
+        sample.close()
+        judge.reload()
+        expect(judge.get_by_text("The practice mug has a chipped rim.")).to_be_visible()
+        judge.get_by_label("Refund amount (USD)").fill("12")
+        judge.get_by_label("Reason for proposal").fill("Practice adjustment for the chipped rim")
+        judge.get_by_role("button", name="Prepare refund proposal").click()
+        practice_approval = judge.get_by_role("button", name="Approve exact refund")
+        expect(practice_approval).to_be_disabled()
+        judge.get_by_label("I reviewed the amount and destination.").check()
+        practice_approval.click()
+        expect(judge.get_by_role("heading", name="Practice approval saved")).to_be_visible()
+        expect(judge.get_by_role("button", name="Send approved sandbox refund")).to_have_count(0)
+        assert judge.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+        judge.screenshot(path=args.output / "practice-mobile.png", full_page=True)
         assert not errors, errors
     finally:
         browser.close()
@@ -90,6 +120,7 @@ report = {
     "browser_flow": "passed",
     "capture": "Chromium simulated camera",
     "merchant_review": "saved",
+    "no_login_practice": "passed",
     "evidence_pdf": "downloaded",
     "live_paypal": False,
     "browser_errors": errors,

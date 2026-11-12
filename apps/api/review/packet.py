@@ -12,11 +12,11 @@ from sqlalchemy import select
 from . import service
 from .claims import latest_evidence, router
 from .models import Audit
-from .router import DB, Merchant
+from .router import DB, Reviewer
 
 
 @router.get("/api/review/cases/{case_id}/packet.pdf")
-def packet(case_id: str, db: DB, actor: Merchant):
+def packet(case_id: str, db: DB, actor: Reviewer):
     case = service.case_for_merchant(db, case_id, actor)
     record = latest_evidence(db, case.id)
     last_event = db.scalar(
@@ -37,7 +37,9 @@ def packet(case_id: str, db: DB, actor: Merchant):
 
     story.append(Paragraph("Proof of Light", style["Title"]))
     add(
-        "Merchant evidence packet",
+        "Practice evidence packet"
+        if case.snapshot["paypal_order_id"].startswith("PRACTICE-")
+        else "Merchant evidence packet",
         f"Case {case.id} | Revision {case.version} | Order {case.snapshot['paypal_order_id']}",
     )
     add(

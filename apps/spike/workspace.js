@@ -1,7 +1,8 @@
-export async function api(path, { token, claimToken, method = "GET", body } = {}) {
+export async function api(path, { token, claimToken, practiceToken, method = "GET", body } = {}) {
   const headers = {};
   if (token) headers.Authorization = `Bearer ${token}`;
   if (claimToken) headers["X-Claim-Token"] = claimToken;
+  if (practiceToken) headers["X-Practice-Token"] = practiceToken;
   if (body !== undefined) headers["Content-Type"] = "application/json";
   const result = await fetch(path, {
     method, headers, body: body === undefined ? undefined : JSON.stringify(body),

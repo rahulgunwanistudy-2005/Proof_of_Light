@@ -15,7 +15,8 @@ from sqlalchemy import select, update
 
 from . import service
 from .models import Case, Evidence, Invitation
-from .router import DB, Merchant
+from .practice_access import PREFIX
+from .router import DB, Merchant, Reviewer
 from .schemas import CaseSnapshot, StrictModel
 
 router = APIRouter(tags=["claim evidence"])
@@ -26,11 +27,17 @@ def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def new_invitation(db, case, expires_at: float) -> str:
+    token = secrets.token_urlsafe(32)
+    db.add(Invitation(token_hash=token_hash(token), case_id=case.id, expires_at=expires_at))
+    service.audit(db, case, case.merchant_id, "invitation_created", {})
+    return f"/claim#{token}"
+
+
 @router.post("/api/review/cases/{case_id}/invitations", status_code=201)
 def invite(case_id: str, db: DB, actor: Merchant):
     with db.begin():
         case = service.case_for_merchant(db, case_id, actor)
-        token = secrets.token_urlsafe(32)
         now = time.time()
         db.execute(
             update(Invitation)
@@ -41,11 +48,8 @@ def invite(case_id: str, db: DB, actor: Merchant):
             )
             .values(expires_at=now)
         )
-        db.add(
-            Invitation(token_hash=token_hash(token), case_id=case.id, expires_at=now + 7 * 86400)
-        )
-        service.audit(db, case, actor, "invitation_created", {})
-    return {"path": f"/claim#{token}"}
+        path = new_invitation(db, case, now + 7 * 86400)
+    return {"path": path}
 
 
 def get_invitation(db: DB, token: str) -> Invitation:
@@ -60,7 +64,13 @@ def get_invitation(db: DB, token: str) -> Invitation:
 @router.get("/api/claim")
 def invitation_status(db: DB, token: ClaimToken):
     invite_record = get_invitation(db, token)
-    return {"submitted": invite_record.used_at is not None}
+    case = db.get(Case, invite_record.case_id)
+    if case is None:
+        raise service.ReviewError("This invitation is invalid or expired.", 404)
+    return {
+        "submitted": invite_record.used_at is not None,
+        "practice": case.merchant_id.startswith(PREFIX),
+    }
 
 
 class Submission(StrictModel):
@@ -113,6 +123,7 @@ def submit(body: Submission, request: Request, db: DB, token: ClaimToken):
         case = db.scalar(select(Case).where(Case.id == invitation.case_id).with_for_update())
         if case is None:
             raise service.ReviewError("Case not found", 404)
+        practice = case.merchant_id.startswith(PREFIX)
         claimed = db.execute(
             update(Invitation)
             .where(
@@ -130,7 +141,7 @@ def submit(body: Submission, request: Request, db: DB, token: ClaimToken):
             image_jpeg=image,
             light_report=light,
             assessment={},
-            ai_consent=body.ai_consent and bool(image),
+            ai_consent=body.ai_consent and bool(image) and not practice,
         )
         db.add(record)
         db.flush()
@@ -154,7 +165,12 @@ def submit(body: Submission, request: Request, db: DB, token: ClaimToken):
                 "ai_consent": record.ai_consent,
             },
         )
-    return {"submitted": True, "message": "Evidence sent to the merchant for review."}
+    message = (
+        "Practice evidence saved. Return to the practice case and refresh."
+        if practice
+        else "Evidence sent to the merchant for review."
+    )
+    return {"submitted": True, "message": message}
 
 
 def latest_evidence(db: DB, case_id: str):
@@ -167,7 +183,7 @@ def latest_evidence(db: DB, case_id: str):
 
 
 @router.get("/api/review/cases/{case_id}/evidence")
-def evidence(case_id: str, db: DB, actor: Merchant):
+def evidence(case_id: str, db: DB, actor: Reviewer):
     service.case_for_merchant(db, case_id, actor)
     record = latest_evidence(db, case_id)
     if record is None:
@@ -184,7 +200,7 @@ def evidence(case_id: str, db: DB, actor: Merchant):
 
 
 @router.get("/api/review/cases/{case_id}/evidence/{evidence_id}.jpg")
-def evidence_image(case_id: str, evidence_id: str, db: DB, actor: Merchant):
+def evidence_image(case_id: str, evidence_id: str, db: DB, actor: Reviewer):
     service.case_for_merchant(db, case_id, actor)
     record = db.get(Evidence, evidence_id)
     if record is None or record.case_id != case_id or not record.image_jpeg:

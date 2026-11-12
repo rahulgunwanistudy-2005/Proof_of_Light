@@ -3,7 +3,10 @@ import { api, download, money, node, withButton } from "./workspace.js";
 const get = (id) => document.getElementById(id);
 const notices = get("notice");
 const detail = get("case-detail");
+const practice = location.pathname === "/practice";
+const practiceStorage = "proof-of-light-practice";
 let token = "";
+let practiceToken = "";
 let activeId = null;
 let imageUrl = null;
 let renderVersion = 0;
@@ -14,7 +17,7 @@ function notice(value, error = false) {
 }
 
 function request(path, options = {}) {
-  return api(`/api/review${path}`, { ...options, token });
+  return api(`/api/review${path}`, { ...options, token, practiceToken });
 }
 
 function post(path, body = {}) {
@@ -41,7 +44,25 @@ function pairs(parent, entries) {
 }
 
 async function refresh(select = activeId) {
-  const [cases, orders, catalog] = await Promise.all([request("/cases"), request("/shop-orders"), api("/api/shop")]);
+  const casesRequest = request("/cases");
+  if (!practice) {
+    await Promise.all([casesRequest, refreshSandbox()]);
+  }
+  const cases = await casesRequest;
+  const list = get("case-list");
+  list.replaceChildren();
+  for (const entry of [...cases].reverse()) {
+    const element = button(entry.snapshot.paypal_order_id, () => refresh(entry.id));
+    element.setAttribute("aria-current", String(entry.id === select));
+    list.append(element);
+  }
+  if (!cases.length) list.append(node("p", "Create a practice case to try the review flow.", "notice"));
+  if (select && cases.some((entry) => entry.id === select)) await showCase(select);
+  else detail.replaceChildren();
+}
+
+async function refreshSandbox() {
+  const [orders, catalog] = await Promise.all([request("/shop-orders"), api("/api/shop")]);
   const disputes = get("disputes");
   disputes.hidden = !catalog.sandbox_ready;
   disputes.replaceChildren(node("h2", "PayPal disputes"));
@@ -58,14 +79,6 @@ async function refresh(select = activeId) {
     disputes.querySelector(".stack")?.remove();
     disputes.append(results);
   }));
-  const list = get("case-list");
-  list.replaceChildren();
-  for (const entry of [...cases].reverse()) {
-    const element = button(entry.snapshot.paypal_order_id, () => refresh(entry.id));
-    element.setAttribute("aria-current", String(entry.id === select));
-    list.append(element);
-  }
-  if (!cases.length) list.append(node("p", "Create a practice case to try the review flow.", "notice"));
   const orderList = get("orders");
   orderList.hidden = orders.length === 0;
   orderList.replaceChildren(node("h2", "Completed sandbox orders"));
@@ -104,8 +117,6 @@ async function refresh(select = activeId) {
     }
     orderList.append(row);
   }
-  if (select && cases.some((entry) => entry.id === select)) await showCase(select);
-  else detail.replaceChildren();
 }
 
 function renderLight(parent, light) {
@@ -144,7 +155,7 @@ async function showCase(id) {
   if (dispute?.id) pairs(context, [["PayPal status", dispute.status || "Unknown"], ["Dispute stage", dispute.stage || "Unknown"], ["Seller response due", dispute.seller_due || "Unavailable"]]);
   const inviteSlot = node("div");
   const actions = node("div", undefined, "actions");
-  actions.append(button("Create buyer link", async () => {
+  if (!practice) actions.append(button("Create buyer link", async () => {
     const invite = await post(`/cases/${id}/invitations`);
     const url = new URL(invite.path, location.origin).href;
     const link = node("a", "Open buyer invitation");
@@ -158,7 +169,8 @@ async function showCase(id) {
     copy.addEventListener("focus", () => copy.select());
     inviteSlot.replaceChildren(link, copy);
     notice("Buyer link created. Share it with the buyer. It accepts one submission.");
-  }), button("Download evidence PDF", async () => download(await request(`/cases/${id}/packet.pdf`), `proof-of-light-${id}.pdf`)));
+  }));
+  actions.append(button("Download evidence PDF", async () => download(await request(`/cases/${id}/packet.pdf`), `proof-of-light-${id}.pdf`)));
   context.append(actions, inviteSlot);
   detail.append(context);
   const evidenceSheet = sheet("Buyer evidence");
@@ -287,7 +299,10 @@ get("login").addEventListener("submit", (event) => {
   }, (msg) => notice(msg, true));
 });
 get("refresh").addEventListener("click", (event) => withButton(event.currentTarget, () => refresh(), (msg) => notice(msg, true)));
-get("sign-out").addEventListener("click", () => location.reload());
+get("sign-out").addEventListener("click", () => {
+  if (practice) sessionStorage.removeItem(practiceStorage);
+  location.reload();
+});
 get("new-demo").addEventListener("click", (event) => withButton(event.currentTarget, async () => {
   const id = crypto.randomUUID().slice(0, 8).toUpperCase();
   const created = await post("/cases", { paypal_order_id: `PRACTICE-${id}`, capture_id: `PRACTICE-${id}`, amount_minor: 4800, currency: "USD" });
@@ -303,3 +318,39 @@ get("new-case").addEventListener("submit", (event) => {
     await refresh(created.id);
   }, (msg) => notice(msg, true));
 });
+
+async function openPractice(session) {
+  practiceToken = session.token;
+  await refresh(session.case_id);
+  get("practice-claim").href = session.claim_path;
+  get("practice-start").hidden = true;
+  get("practice-steps").hidden = false;
+  get("workspace").hidden = false;
+  notice("");
+}
+
+if (practice) {
+  document.title = "Practice case · Proof of Light";
+  get("workspace-title").textContent = "Practice case";
+  get("workspace-description").textContent = "Follow the buyer and merchant steps with a sample order.";
+  get("review-link").removeAttribute("aria-current");
+  get("manual-case").hidden = true;
+  get("new-demo").hidden = true;
+  get("sign-out").textContent = "End practice";
+  get("practice-start").hidden = false;
+  get("start-practice").addEventListener("click", (event) => withButton(event.currentTarget, async () => {
+    const session = await api("/api/practice", { method: "POST" });
+    sessionStorage.setItem(practiceStorage, JSON.stringify(session));
+    await openPractice(session);
+    get("practice-claim").focus();
+  }, (message) => notice(message, true)));
+  try {
+    const session = JSON.parse(sessionStorage.getItem(practiceStorage));
+    if (session?.expires_at > Date.now() / 1000) await openPractice(session);
+  } catch {
+    sessionStorage.removeItem(practiceStorage);
+    notice("Start a new practice case to continue.");
+  }
+} else {
+  get("login").hidden = false;
+}
